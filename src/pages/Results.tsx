@@ -275,6 +275,9 @@ function UniversityCard({ admissionChance, getChanceColor, getCategoryLabel, get
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>Средний GPA принятых: {university.avgGPA}</li>
                   <li>Средний IELTS: {university.avgIELTS}</li>
+                  {university.avgTOEFL !== undefined && (
+                    <li>Средний TOEFL: {university.avgTOEFL}</li>
+                  )}
                   {university.tuition !== undefined && (
                     <li>Стоимость: ${university.tuition.toLocaleString()}/год</li>
                   )}

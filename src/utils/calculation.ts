@@ -41,22 +41,55 @@ export function calculateAdmissionChance(
   // English Test Analysis (25% weight)
   if (profile.englishTest && profile.englishScore !== undefined) {
     const testScore = profile.englishScore;
-    const minRequired = profile.englishTest === 'IELTS' ? university.minIELTS : (university.minTOEFL || 0);
     
-    if (testScore >= university.avgIELTS) {
-      score += 15;
-      reasons.push(`Отличный результат ${profile.englishTest} (${testScore}) выше среднего`);
-    } else if (testScore >= minRequired) {
-      score += 8;
-      reasons.push(`Результат ${profile.englishTest} (${testScore}) соответствует требованиям`);
-    } else {
-      score -= 25;
-      reasons.push(`Результат ${profile.englishTest} (${testScore}) ниже минимальных требований (${minRequired})`);
-      recommendations.push(`Необходимо улучшить результат ${profile.englishTest} до минимум ${minRequired}`);
+    if (profile.englishTest === 'IELTS') {
+      // IELTS analysis
+      const minRequired = university.minIELTS;
+      const avgScore = university.avgIELTS;
+      
+      if (testScore >= avgScore) {
+        score += 15;
+        reasons.push(`Отличный результат IELTS (${testScore}) выше среднего (${avgScore})`);
+      } else if (testScore >= minRequired) {
+        score += 8;
+        reasons.push(`Результат IELTS (${testScore}) соответствует требованиям`);
+      } else {
+        score -= 25;
+        reasons.push(`Результат IELTS (${testScore}) ниже минимальных требований (${minRequired})`);
+        recommendations.push(`Необходимо улучшить результат IELTS до минимум ${minRequired}`);
+      }
+    } else if (profile.englishTest === 'TOEFL') {
+      // TOEFL analysis
+      // Check if university accepts TOEFL
+      if (university.minTOEFL === undefined) {
+        // University doesn't accept TOEFL (common for UK/European universities)
+        score -= 15;
+        reasons.push(`Этот университет не принимает результаты TOEFL, требуется IELTS`);
+        recommendations.push(`Для этого университета необходимо сдать IELTS (минимум ${university.minIELTS})`);
+      } else {
+        const minRequired = university.minTOEFL;
+        const avgScore = university.avgTOEFL;
+        
+        if (avgScore !== undefined && testScore >= avgScore) {
+          score += 15;
+          reasons.push(`Отличный результат TOEFL (${testScore}) выше среднего (${avgScore})`);
+        } else if (testScore >= minRequired) {
+          score += 8;
+          reasons.push(`Результат TOEFL (${testScore}) соответствует требованиям`);
+        } else {
+          score -= 25;
+          reasons.push(`Результат TOEFL (${testScore}) ниже минимальных требований (${minRequired})`);
+          recommendations.push(`Необходимо улучшить результат TOEFL до минимум ${minRequired}`);
+        }
+      }
     }
   } else {
     score -= 20;
-    recommendations.push(`Сдайте ${university.minIELTS >= 7 ? 'IELTS или TOEFL' : 'IELTS'} для подтверждения уровня английского`);
+    const acceptsTOEFL = university.minTOEFL !== undefined;
+    const testRecommendation = acceptsTOEFL 
+      ? (university.minIELTS >= 7 ? 'IELTS или TOEFL' : 'IELTS или TOEFL')
+      : 'IELTS';
+    recommendations.push(`Сдайте ${testRecommendation} для подтверждения уровня английского`);
   }
 
   // Standardized Tests (15% weight)

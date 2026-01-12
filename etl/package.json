@@ -1,0 +1,22 @@
+{
+  "name": "unichance-etl",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "import:qs": "tsx import_qs_rankings.ts",
+    "import:universities": "tsx import_university_data.ts",
+    "run": "tsx import_university_data.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "csv-parse": "^5.5.3",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5"
+  }
+}

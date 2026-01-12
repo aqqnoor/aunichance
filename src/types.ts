@@ -55,6 +55,7 @@ export interface University {
   competition: 'low' | 'medium' | 'high' | 'very-high';
   avgGPA: number;
   avgIELTS: number;
+  avgTOEFL?: number;
   
   // Additional info
   tuition?: number;

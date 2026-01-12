@@ -4,6 +4,7 @@ import { StudentProfile } from './types';
 import Home from './pages/Home';
 import Results from './pages/Results';
 import Profile from './pages/Profile';
+import Search from './pages/Search';
 import Layout from './components/Layout';
 
 function App() {
@@ -24,6 +25,10 @@ function App() {
           <Route 
             path="/profile" 
             element={<Profile profile={profile} setProfile={setProfile} />} 
+          />
+          <Route 
+            path="/search" 
+            element={<Search />} 
           />
         </Routes>
       </Layout>
