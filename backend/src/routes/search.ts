@@ -18,6 +18,7 @@ const searchSchema = z.object({
   deadline_before: z.string().optional(), // ISO date string
   min_acceptance_rate: z.number().optional(),
   max_acceptance_rate: z.number().optional(),
+  sort: z.enum(['relevance', 'ranking', 'name']).default('relevance'),
   limit: z.number().min(1).max(100).default(20),
   offset: z.number().min(0).default(0),
 });
@@ -34,10 +35,12 @@ router.get('/', async (req, res) => {
           : req.query.has_scholarship === 'true',
       min_acceptance_rate: req.query.min_acceptance_rate ? Number(req.query.min_acceptance_rate) : undefined,
       max_acceptance_rate: req.query.max_acceptance_rate ? Number(req.query.max_acceptance_rate) : undefined,
+      sort: req.query.sort || 'relevance',
       limit: req.query.limit ? Number(req.query.limit) : 20,
       offset: req.query.offset ? Number(req.query.offset) : 0,
     });
 
+    // Build base query with LATERAL joins for performance
     let query = `
       SELECT DISTINCT
         p.id,
@@ -64,6 +67,19 @@ router.get('/', async (req, res) => {
         sch.has_scholarship,
         dl.next_deadline,
         acc.avg_acceptance_rate
+    `;
+
+    // Add relevance score if text search is used
+    if (params.query) {
+      query += `,
+        GREATEST(
+          COALESCE(ts_rank(p.search_vector, plainto_tsquery('simple', $1)), 0),
+          COALESCE(ts_rank(u.search_vector, plainto_tsquery('simple', $1)), 0)
+        ) as relevance_score
+      `;
+    }
+
+    query += `
       FROM programs p
       INNER JOIN universities u ON p.university_id = u.id
       INNER JOIN countries c ON u.country_id = c.id
@@ -88,19 +104,21 @@ router.get('/', async (req, res) => {
     `;
 
     const queryParams: any[] = [];
-    let paramIndex = 1;
+    let paramIndex = params.query ? 2 : 1; // Start from 2 if query exists (used in SELECT)
 
-    // Text search
+    // Text search using search_vector (primary) with ILIKE fallback
     if (params.query) {
-      query += ` AND (
-        to_tsvector('english', p.name) @@ plainto_tsquery('english', $${paramIndex}) OR
-        to_tsvector('english', u.name) @@ plainto_tsquery('english', $${paramIndex}) OR
-        p.name ILIKE $${paramIndex + 1} OR
-        u.name ILIKE $${paramIndex + 1}
-      )`;
+      queryParams.push(params.query); // $1 for tsquery
       const searchTerm = `%${params.query}%`;
-      queryParams.push(params.query, searchTerm);
-      paramIndex += 2;
+      queryParams.push(searchTerm); // $2 for ILIKE fallback
+      
+      query += ` AND (
+        (p.search_vector @@ plainto_tsquery('simple', $1) OR u.search_vector @@ plainto_tsquery('simple', $1))
+        OR p.name ILIKE $2
+        OR u.name ILIKE $2
+        OR p.field_of_study ILIKE $2
+      )`;
+      paramIndex = 3;
     }
 
     // Filters
@@ -135,7 +153,7 @@ router.get('/', async (req, res) => {
     }
 
     if (params.language) {
-      query += ` AND p.language = $${paramIndex}`;
+      query += ` AND (p.language = $${paramIndex} OR p.language_id = (SELECT id FROM languages WHERE code = $${paramIndex} OR name = $${paramIndex} LIMIT 1))`;
       queryParams.push(params.language);
       paramIndex++;
     }
@@ -174,14 +192,21 @@ router.get('/', async (req, res) => {
       paramIndex++;
     }
 
-    // Ordering and pagination
-    query += ` ORDER BY u.qs_ranking NULLS LAST, u.the_ranking NULLS LAST, p.name`;
+    // Ordering
+    if (params.query && params.sort === 'relevance') {
+      query += ` ORDER BY relevance_score DESC NULLS LAST, u.qs_ranking NULLS LAST, u.the_ranking NULLS LAST, p.name`;
+    } else if (params.sort === 'ranking') {
+      query += ` ORDER BY u.qs_ranking NULLS LAST, u.the_ranking NULLS LAST, p.name`;
+    } else {
+      query += ` ORDER BY p.name, u.name`;
+    }
+
     query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     queryParams.push(params.limit, params.offset);
 
     const result = await pool.query(query, queryParams);
 
-    // Get total count for pagination
+    // Get total count for pagination (using same filters)
     let countQuery = `
       SELECT COUNT(DISTINCT p.id)
       FROM programs p
@@ -203,17 +228,19 @@ router.get('/', async (req, res) => {
     const countParams: any[] = [];
     let countParamIndex = 1;
 
-    // Apply same filters for count
+    // Apply same filters for count (including text search)
     if (params.query) {
-      countQuery += ` AND (
-        to_tsvector('english', p.name) @@ plainto_tsquery('english', $${countParamIndex}) OR
-        to_tsvector('english', u.name) @@ plainto_tsquery('english', $${countParamIndex}) OR
-        p.name ILIKE $${countParamIndex + 1} OR
-        u.name ILIKE $${countParamIndex + 1}
-      )`;
+      countParams.push(params.query);
       const searchTerm = `%${params.query}%`;
-      countParams.push(params.query, searchTerm);
-      countParamIndex += 2;
+      countParams.push(searchTerm);
+      
+      countQuery += ` AND (
+        (p.search_vector @@ plainto_tsquery('simple', $1) OR u.search_vector @@ plainto_tsquery('simple', $1))
+        OR p.name ILIKE $2
+        OR u.name ILIKE $2
+        OR p.field_of_study ILIKE $2
+      )`;
+      countParamIndex = 3;
     }
 
     if (params.country) {
@@ -247,7 +274,7 @@ router.get('/', async (req, res) => {
     }
 
     if (params.language) {
-      countQuery += ` AND p.language = $${countParamIndex}`;
+      countQuery += ` AND (p.language = $${countParamIndex} OR p.language_id = (SELECT id FROM languages WHERE code = $${countParamIndex} OR name = $${countParamIndex} LIMIT 1))`;
       countParams.push(params.language);
       countParamIndex++;
     }
