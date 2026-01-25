@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StudentProfile, Region } from '../types';
-import { calculateChancesForUniversities, calculateAdmissionChance } from '../utils/calculation';
+import { calculateAdmissionChance } from '../utils/calculation';
 import { universities } from '../data/universities';
 
 interface ProfileProps {

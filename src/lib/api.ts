@@ -12,7 +12,10 @@ export async function apiGet<T>(path: string): Promise<T> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
+  }
   return res.json();
 }
 
@@ -28,7 +31,10 @@ export async function apiPost<T>(path: string, body: any): Promise<T> {
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
+  }
   return res.json();
 }
 
@@ -40,6 +46,9 @@ export async function apiDelete<T>(path: string): Promise<T> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
+  }
   return res.json();
 }

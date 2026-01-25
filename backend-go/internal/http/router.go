@@ -2,23 +2,21 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoMw "github.com/labstack/echo/v4/middleware"
 
 	"unichance-backend-go/internal/auth"
 	appMw "unichance-backend-go/internal/middleware"
-	"unichance-backend-go/internal/programs"
 	"unichance-backend-go/internal/profile"
-	"unichance-backend-go/internal/shortlist"
+	"unichance-backend-go/internal/programs"
 )
 
 type Deps struct {
-	AuthHandler      auth.Handler
-	ProgramsHandler  programs.Handler
-	ProfileHandler   profile.Handler
-	ShortlistHandler shortlist.Handler
-	JwtSecret        string
+	AuthHandler     auth.Handler
+	ProgramsHandler programs.Handler
+	ProfileHandler  profile.Handler
+	JwtSecret       string
 }
-
 
 func NewRouter(d Deps) *echo.Echo {
 	e := echo.New()
@@ -29,6 +27,12 @@ func NewRouter(d Deps) *echo.Echo {
 		AllowOrigins: []string{"http://localhost:5173"},
 		AllowHeaders: []string{"Authorization", "Content-Type"},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+	}))
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:5173", "http://127.0.0.1:5173"},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.OPTIONS},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
 
 	e.GET("/health", func(c echo.Context) error { return c.String(200, "ok") })
@@ -48,11 +52,5 @@ func NewRouter(d Deps) *echo.Echo {
 	e.POST("/profile/me", d.ProfileHandler.UpsertMe, appMw.RequireAuth(d.JwtSecret))
 	e.POST("/score", d.ProfileHandler.ScoreProgram, appMw.RequireAuth(d.JwtSecret))
 
-	// shortlist (protected)  <-- middleware дегенді appMw деп жаз
-	e.GET("/shortlist", d.ShortlistHandler.List, appMw.RequireAuth(d.JwtSecret))
-	e.POST("/shortlist", d.ShortlistHandler.Add, appMw.RequireAuth(d.JwtSecret))
-	e.DELETE("/shortlist/:program_id", d.ShortlistHandler.Remove, appMw.RequireAuth(d.JwtSecret))
-
 	return e
 }
-

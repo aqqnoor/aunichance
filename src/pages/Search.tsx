@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { apiGet } from "../lib/api";
 
 type ProgramDTO = {
@@ -44,6 +43,8 @@ function normalizeLevel(uiLevel: string): string {
 export default function Search() {
   const [results, setResults] = useState<ProgramDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
 
   const [filters, setFilters] = useState<SearchFilters>({
     query: "",
@@ -61,6 +62,16 @@ export default function Search() {
 
   const [showFilters, setShowFilters] = useState(false);
 
+  const regionToCountries: Record<string, string> = {
+  USA: "US",
+  UK: "GB",
+  Europe: "DE,FR",
+  Canada: "CA",
+  Australia: "AU",
+  Other: "",
+};
+
+
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -68,14 +79,39 @@ export default function Search() {
 
       // Backend expects: q, countries, levels, min_tuition, max_tuition, scholarship, page, limit
       if (filters.query) params.set("q", filters.query.trim());
+      // countries: manual OR from region OR MVP default
+      let countries = (filters.country || "").replace(/\s+/g, "");
 
-      if (filters.country) {
-        // allow "DE" or "DE,US"
-        params.set("countries", filters.country.replaceAll(" ", ""));
+      if (!countries && filters.region) {
+        countries = regionToCountries[filters.region] || "";
       }
+
+
+// MVP default (сен бекіткен): DE/US/GB/FR
+if (!countries) {
+  countries = "DE,US,GB,FR";
+}
+
+params.set("countries", countries);
+
 
       const lvl = normalizeLevel(filters.degree_level);
       if (lvl) params.set("levels", lvl);
+
+      if (filters.city && filters.city.trim() !== "") {
+        params.set("city", filters.city.trim());
+      }
+
+      if (filters.field_of_study && filters.field_of_study.trim() !== "") {
+        // backend-go expects "fields"
+        params.set("fields", filters.field_of_study.trim());
+      }
+
+      if (filters.language && filters.language !== "Все языки") {
+        // сенің dropdown value "Все языки" болуы мүмкін
+        params.set("language", filters.language);
+      }
+
 
       if (filters.min_tuition) params.set("min_tuition", filters.min_tuition);
       if (filters.max_tuition) params.set("max_tuition", filters.max_tuition);
@@ -86,13 +122,20 @@ export default function Search() {
       params.set("page", "1");
       params.set("limit", "20");
 
-      const data = await apiGet<{ items: ProgramDTO[]; total?: number }>(
-        `/programs?${params.toString()}`
-      );
+      const url = `/programs?${params.toString()}`;
+      console.log("Request:", url);
+
+      const data = await apiGet<{ items: ProgramDTO[]; total?: number }>(url);
+
+      console.log("API items:", data.items?.length, data);
+
+      console.log("Request:", `/programs?${params.toString()}`);
+
 
       setResults(data.items || []);
     } catch (error) {
       console.error("Search error:", error);
+      setErrorMsg(error instanceof Error ? error.message : String(error));
       setResults([]);
     } finally {
       setLoading(false);
@@ -103,6 +146,8 @@ export default function Search() {
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+
 
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -282,6 +327,12 @@ export default function Search() {
           </div>
         )}
       </div>
+      
+      {errorMsg && (
+        <div className="mt-3 p-3 rounded border border-red-300 bg-red-50 text-red-700">
+          {errorMsg}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12">
@@ -298,6 +349,7 @@ export default function Search() {
           {results.map((result) => (
             <ProgramCard key={result.id} result={result} />
           ))}
+          
         </div>
       )}
     </div>
@@ -351,11 +403,7 @@ function ProgramCard({ result }: { result: ProgramDTO }) {
           )}
         </div>
 
-        <div className="flex items-center">
-          <Link to={`/programs/${result.id}`} className="btn-secondary">
-            Подробнее
-          </Link>
-        </div>
+        
       </div>
     </div>
   );
