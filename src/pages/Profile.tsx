@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StudentProfile, Region } from '../types';
+import { apiGet, apiPost } from '../lib/api';
 import { calculateAdmissionChance } from '../utils/calculation';
 import { universities } from '../data/universities';
 
@@ -19,6 +20,22 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     setFormData(profile);
   }, [profile]);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await apiGet<StudentProfile>('/profile/me');
+        if (mounted && data) {
+          setFormData(data);
+          setProfile(data);
+        }
+      } catch (e) {
+        console.debug('Profile load skipped', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [setProfile]);
+
   // Calculate preview chance when form data changes
   useEffect(() => {
     if (formData.gpa && formData.englishScore) {
@@ -32,8 +49,15 @@ export default function Profile({ profile, setProfile }: ProfileProps) {
     }
   }, [formData]);
 
-  const handleSave = () => {
-    setProfile(formData);
+  const handleSave = async () => {
+    try {
+      const saved = await apiPost<StudentProfile>('/profile/me', formData);
+      setProfile(saved || formData);
+    } catch (e) {
+      console.error('Failed to save profile', e);
+      // still update local state
+      setProfile(formData);
+    }
     navigate('/results');
   };
 
