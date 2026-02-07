@@ -71,6 +71,18 @@ export interface AdmissionChance {
   recommendations: string[];
 }
 
+export interface ScoreResult {
+  score: number; // 0-100
+  category: 'reach' | 'target' | 'safety';
+  breakdown: {
+    gpa: number;
+    language: number;
+    tests: number;
+    extras: number;
+  };
+  reasons: string[];
+}
+
 export type Region = 'USA' | 'Europe' | 'UK' | 'Canada' | 'Australia' | 'Other';
 
 export interface Program {

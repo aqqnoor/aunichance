@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { apiGet } from "../lib/api";
+import { apiGet, apiPost } from "../lib/api";
 import { Link } from "react-router-dom";
+import { ScoreResult } from "../types";
 
 type ProgramDTO = {
   id: string;
@@ -47,6 +48,8 @@ export default function Search() {
   const [results, setResults] = useState<ProgramDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [scores, setScores] = useState<Record<string, ScoreResult>>({});
+  const [loadingScores, setLoadingScores] = useState<Record<string, boolean>>({});
 
 
   const [filters, setFilters] = useState<SearchFilters>({
@@ -134,8 +137,11 @@ params.set("countries", countries);
 
       console.log("Request:", `/programs?${params.toString()}`);
 
+      const programs = data.items || [];
+      setResults(programs);
 
-      setResults(data.items || []);
+      // Load scores for all programs (if user is authenticated)
+      loadScoresForPrograms(programs);
     } catch (error) {
       console.error("Search error:", error);
       setErrorMsg(error instanceof Error ? error.message : String(error));
@@ -154,6 +160,64 @@ params.set("countries", countries);
 
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const loadScoresForPrograms = async (programs: ProgramDTO[]) => {
+    // Check if user is authenticated
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // User not authenticated, skip scoring
+    }
+
+    // Filter programs that need scores
+    const programsToScore = programs.filter(
+      (p) => !scores[p.id] && !loadingScores[p.id]
+    );
+
+    if (programsToScore.length === 0) {
+      return;
+    }
+
+    // Mark as loading
+    const loadingMap: Record<string, boolean> = {};
+    programsToScore.forEach((p) => {
+      loadingMap[p.id] = true;
+    });
+    setLoadingScores((prev) => ({ ...prev, ...loadingMap }));
+
+    // Load scores in parallel
+    const scorePromises = programsToScore.map(async (program) => {
+      try {
+        const scoreData = await apiPost<ScoreResult>("/score", {
+          program_id: program.id,
+        });
+        return { programId: program.id, score: scoreData };
+      } catch (error) {
+        // Profile might not exist, or other error - silently fail
+        console.debug("Score not available for program", program.id, error);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(scorePromises);
+    
+    // Update scores
+    const newScores: Record<string, ScoreResult> = {};
+    results.forEach((result) => {
+      if (result) {
+        newScores[result.programId] = result.score;
+      }
+    });
+    setScores((prev) => ({ ...prev, ...newScores }));
+
+    // Clear loading state
+    setLoadingScores((prev) => {
+      const next = { ...prev };
+      programsToScore.forEach((p) => {
+        delete next[p.id];
+      });
+      return next;
+    });
   };
 
   return (
@@ -350,7 +414,12 @@ params.set("countries", countries);
       ) : (
         <div className="space-y-4">
           {results.map((result) => (
-            <ProgramCard key={result.id} result={result} />
+            <ProgramCard 
+              key={result.id} 
+              result={result} 
+              score={scores[result.id]}
+              loadingScore={loadingScores[result.id]}
+            />
           ))}
           
         </div>
@@ -359,20 +428,70 @@ params.set("countries", countries);
   );
 }
 
-function ProgramCard({ result }: { result: ProgramDTO }) {
+function ProgramCard({ 
+  result, 
+  score, 
+  loadingScore 
+}: { 
+  result: ProgramDTO;
+  score?: ScoreResult;
+  loadingScore?: boolean;
+}) {
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case "reach":
+        return "bg-red-100 text-red-800 border-red-300";
+      case "target":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      case "safety":
+        return "bg-green-100 text-green-800 border-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
+  };
+
+  const getCategoryLabel = (category?: string) => {
+    switch (category) {
+      case "reach":
+        return "Reach";
+      case "target":
+        return "Target";
+      case "safety":
+        return "Safety";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="card">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {result.title}
-          </h3>
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-xl font-bold text-gray-900">
+              {result.title}
+            </h3>
+            {score && (
+              <div className="flex flex-col items-end gap-1 ml-4">
+                <div className={`px-4 py-2 rounded-lg border-2 font-bold text-lg ${getCategoryColor(score.category)}`}>
+                  {score.score}%
+                </div>
+                <span className="text-xs font-medium text-gray-600">
+                  {getCategoryLabel(score.category)}
+                </span>
+              </div>
+            )}
+            {loadingScore && (
+              <div className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-600 text-sm">
+                Загрузка...
+              </div>
+            )}
+          </div>
 
           <p className="text-gray-600 mb-2">
-            
-              <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-medium hover:underline">
-                {result.university_name}
-              </Link>
+            <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-medium hover:underline">
+              {result.university_name}
+            </Link>
             {" • "}
             {(result.city ? `${result.city}, ` : "")}
             {result.country_code}
@@ -406,10 +525,6 @@ function ProgramCard({ result }: { result: ProgramDTO }) {
             <p className="text-sm text-gray-600">QS Ranking: #{result.qs_rank}</p>
           )}
         </div>
-
-        
-
-        
       </div>
     </div>
   );

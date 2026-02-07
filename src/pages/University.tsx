@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { apiGet } from "../lib/api";
+import { apiGet, apiPost } from "../lib/api";
+import { ScoreResult } from "../types";
 
 type UniversityLink = {
   id: string;
@@ -54,6 +55,9 @@ export default function University() {
   const [data, setData] = useState<UniversityDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [programScore, setProgramScore] = useState<ScoreResult | null>(null);
+  const [loadingScore, setLoadingScore] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -65,6 +69,27 @@ export default function University() {
       .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const loadProgramScore = async (programId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // User not authenticated
+    }
+
+    setLoadingScore(true);
+    setSelectedProgramId(programId);
+    try {
+      const score = await apiPost<ScoreResult>("/score", {
+        program_id: programId,
+      });
+      setProgramScore(score);
+    } catch (error) {
+      console.debug("Score not available", error);
+      setProgramScore(null);
+    } finally {
+      setLoadingScore(false);
+    }
+  };
 
   if (loading) {
     return <div className="max-w-5xl mx-auto px-4 py-8">Loading...</div>;
@@ -159,7 +184,15 @@ export default function University() {
           ) : (
             <div className="space-y-3">
               {data.programs.map((p) => (
-                <div key={p.id} className="p-3 rounded border border-gray-200">
+                <div 
+                  key={p.id} 
+                  className={`p-3 rounded border cursor-pointer transition-colors ${
+                    selectedProgramId === p.id 
+                      ? "border-primary-500 bg-primary-50" 
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                  onClick={() => loadProgramScore(p.id)}
+                >
                   <div className="font-semibold text-gray-900">{p.title}</div>
                   <div className="text-sm text-gray-600">
                     {p.degree_level} • {p.field} • {p.language}
@@ -176,6 +209,110 @@ export default function University() {
           )}
         </div>
       </div>
+
+      {/* SCORING DETAILS */}
+      {selectedProgramId && (
+        <div className="card mt-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Шансы поступления
+          </h2>
+          
+          {loadingScore ? (
+            <div className="text-center py-8 text-gray-600">
+              Загрузка анализа...
+            </div>
+          ) : programScore ? (
+            <div className="space-y-6">
+              {/* Overall Score */}
+              <div className="flex items-center gap-6">
+                <div className={`px-6 py-4 rounded-lg border-2 font-bold text-3xl ${
+                  programScore.category === "reach" 
+                    ? "bg-red-100 text-red-800 border-red-300"
+                    : programScore.category === "target"
+                    ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                    : "bg-green-100 text-green-800 border-green-300"
+                }`}>
+                  {programScore.score}%
+                </div>
+                <div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {programScore.category === "reach" && "Reach (Амбициозная цель)"}
+                    {programScore.category === "target" && "Target (Реалистичная цель)"}
+                    {programScore.category === "safety" && "Safety (Безопасный вариант)"}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    Общий шанс поступления
+                  </div>
+                </div>
+              </div>
+
+              {/* Breakdown */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Детальный анализ
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {programScore.breakdown.gpa}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">GPA (из 40)</div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {programScore.breakdown.language}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Язык (из 30)</div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {programScore.breakdown.tests}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Тесты (из 20)</div>
+                  </div>
+                  <div className="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {programScore.breakdown.extras}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">Достижения (из 10)</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reasons */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Объяснение оценки
+                </h3>
+                <ul className="space-y-2">
+                  {programScore.reasons.map((reason, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-primary-600 mt-1">•</span>
+                      <span className="text-gray-700">{reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-2">
+                Для просмотра анализа шансов поступления необходимо:
+              </p>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Заполнить профиль</li>
+                <li>• Указать GPA, IELTS/TOEFL и другие данные</li>
+              </ul>
+              <Link 
+                to="/profile" 
+                className="mt-4 inline-block text-primary-600 hover:underline font-medium"
+              >
+                Перейти к профилю →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

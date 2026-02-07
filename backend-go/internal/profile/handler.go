@@ -67,13 +67,18 @@ func (h Handler) ScoreProgram(c echo.Context) error {
     return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
   }
 
+  // Check if user has achievements
+  hasAchievements := (prof.Awards != nil && *prof.Awards != "") || 
+                     (prof.AchievementsSummary != nil && *prof.AchievementsSummary != "")
+
   res := scoring.Compute(scoring.Profile{
     GPA: prof.GPA, GPAScale: prof.GPAScale,
     IELTS: prof.IELTS, TOEFL: prof.TOEFL, SAT: prof.SAT,
     BudgetYear: prof.BudgetYear,
+    HasAchievements: hasAchievements,
   }, r)
 
-  // history-ге сақтау
+  // Save to history
   _, _ = h.DB.Exec(c.Request().Context(), `
     INSERT INTO scores(profile_id, program_id, score, reasons)
     VALUES ($1,$2,$3,to_jsonb($4::text[]))
@@ -81,6 +86,8 @@ func (h Handler) ScoreProgram(c echo.Context) error {
 
   return c.JSON(http.StatusOK, map[string]any{
     "score": res.Score,
+    "category": res.Category,
+    "breakdown": res.Breakdown,
     "reasons": res.Reasons,
   })
 }
