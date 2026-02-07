@@ -60,6 +60,31 @@ JWT_EXPIRES_IN=7d
 ENCRYPTION_KEY=your-32-character-encryption-key-here
 ```
 
+### Настройки фронтенда (Vite)
+
+Для настройки поведения health-check и автоповторов можно задать переменные окружения для Vite (файлы `.env`, `.env.local` в корне проекта):
+
+```env
+# URL backend (пример):
+VITE_API_URL=http://localhost:3001
+
+# Интервал автоповтора health-check в секундах (по умолчанию 10)
+VITE_HEALTH_RETRY_INTERVAL=10
+
+# Включить/отключить автоматический повтор (true/false). По умолчанию включено.
+VITE_HEALTH_AUTO_RETRY=true
+
+# Максимальное количество автоматических повторов (0 = неограниченно)
+VITE_HEALTH_RETRY_MAX=0
+```
+
+Пример: чтобы попробовать повторять раз в 30 секунд и ограничить 5 попытками, добавьте:
+
+```env
+VITE_HEALTH_RETRY_INTERVAL=30
+VITE_HEALTH_RETRY_MAX=5
+```
+
 **Важно**: `ENCRYPTION_KEY` должен быть минимум 32 символа для AES-256.
 
 ## Шаг 4: Запуск приложения

@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StudentProfile } from './types';
+import { apiGet } from './lib/api';
 
 import Home from './pages/Home';
 import Results from './pages/Results';
@@ -13,11 +14,37 @@ import Layout from './components/Layout';
 
 function App() {
   const [profile, setProfile] = useState<StudentProfile>({});
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        await apiGet('/health');
+        if (mounted) setBackendAvailable(true);
+      } catch (e) {
+        if (mounted) setBackendAvailable(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const recheckBackend = async () => {
+    try {
+      await apiGet('/health');
+      setBackendAvailable(true);
+    } catch (e) {
+      setBackendAvailable(false);
+      throw e;
+    }
+  };
 
   return (
     <Routes>
       {/* Layout — parent */}
-      <Route element={<Layout />}>
+      <Route element={<Layout backendAvailable={backendAvailable} recheckBackend={recheckBackend} />}>
         <Route
           path="/"
           element={<Home profile={profile} setProfile={setProfile} />}
