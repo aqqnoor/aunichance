@@ -38,10 +38,33 @@ interface SearchFilters {
   deadline_before: string; // MVP: жоқ
 }
 
+type SortField = "title" | "tuition" | "qs_rank" | "score";
+type SortOrder = "asc" | "desc";
+
+const POPULAR_COUNTRIES = [
+  { code: "DE", name: "Германия" },
+  { code: "US", name: "США" },
+  { code: "GB", name: "Великобритания" },
+  { code: "FR", name: "Франция" },
+  { code: "NL", name: "Нидерланды" },
+  { code: "CA", name: "Канада" },
+  { code: "AU", name: "Австралия" },
+  { code: "IT", name: "Италия" },
+  { code: "SE", name: "Швеция" },
+  { code: "CH", name: "Швейцария" },
+];
+
 function normalizeLevel(uiLevel: string): string {
   if (uiLevel === "Bachelor") return "bachelor";
   if (uiLevel === "Master") return "master";
   return "";
+}
+
+function formatTuition(amount: number | undefined): string {
+  if (!amount) return "Н/А";
+  if (amount >= 1000000) return (amount / 1000000).toFixed(1) + "M";
+  if (amount >= 1000) return (amount / 1000).toFixed(0) + "K";
+  return amount.toString();
 }
 
 export default function Search() {
@@ -50,7 +73,8 @@ export default function Search() {
   const [errorMsg, setErrorMsg] = useState("");
   const [scores, setScores] = useState<Record<string, ScoreResult>>({});
   const [loadingScores, setLoadingScores] = useState<Record<string, boolean>>({});
-
+  const [sortField, setSortField] = useState<SortField>("title");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   const [filters, setFilters] = useState<SearchFilters>({
     query: "",
@@ -80,7 +104,19 @@ export default function Search() {
 
   const handleSearch = async () => {
     setLoading(true);
+    setErrorMsg("");
     try {
+      // Валидация: min_tuition не должна быть больше max_tuition
+      if (filters.min_tuition && filters.max_tuition) {
+        const minVal = parseInt(filters.min_tuition);
+        const maxVal = parseInt(filters.max_tuition);
+        if (minVal > maxVal) {
+          setErrorMsg("Минимальная стоимость не может быть больше максимальной");
+          setLoading(false);
+          return;
+        }
+      }
+
       const params = new URLSearchParams();
 
       // Backend expects: q, countries, levels, min_tuition, max_tuition, scholarship, page, limit
@@ -89,17 +125,23 @@ export default function Search() {
       let countries = (filters.country || "").replace(/\s+/g, "");
 
       if (!countries && filters.region) {
-        countries = regionToCountries[filters.region] || "";
+        const regionCountries: Record<string, string> = {
+          USA: "US",
+          UK: "GB",
+          Europe: "DE,FR",
+          Canada: "CA",
+          Australia: "AU",
+          Other: "",
+        };
+        countries = regionCountries[filters.region] || "";
       }
 
+      // MVP default (сен бекіткен): DE/US/GB/FR
+      if (!countries) {
+        countries = "DE,US,GB,FR";
+      }
 
-// MVP default (сен бекіткен): DE/US/GB/FR
-if (!countries) {
-  countries = "DE,US,GB,FR";
-}
-
-params.set("countries", countries);
-
+      params.set("countries", countries);
 
       const lvl = normalizeLevel(filters.degree_level);
       if (lvl) params.set("levels", lvl);
@@ -118,7 +160,6 @@ params.set("countries", countries);
         params.set("language", filters.language);
       }
 
-
       if (filters.min_tuition) params.set("min_tuition", filters.min_tuition);
       if (filters.max_tuition) params.set("max_tuition", filters.max_tuition);
 
@@ -126,7 +167,7 @@ params.set("countries", countries);
 
       // MVP defaults
       params.set("page", "1");
-      params.set("limit", "20");
+      params.set("limit", "50");
 
       const url = `/programs?${params.toString()}`;
       console.log("Request:", url);
@@ -135,10 +176,8 @@ params.set("countries", countries);
 
       console.log("API items:", data.items?.length, data);
 
-      console.log("Request:", `/programs?${params.toString()}`);
-
       const programs = data.items || [];
-      setResults(programs);
+      setResults(sortPrograms(programs, sortField, sortOrder));
 
       // Load scores for all programs (if user is authenticated)
       loadScoresForPrograms(programs);
@@ -155,6 +194,65 @@ params.set("countries", countries);
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const sortPrograms = (programs: ProgramDTO[], field: SortField, order: SortOrder): ProgramDTO[] => {
+    const sorted = [...programs].sort((a, b) => {
+      let aVal: any = 0;
+      let bVal: any = 0;
+
+      switch (field) {
+        case "title":
+          aVal = a.title;
+          bVal = b.title;
+          break;
+        case "tuition":
+          aVal = a.tuition_amount || 0;
+          bVal = b.tuition_amount || 0;
+          break;
+        case "qs_rank":
+          aVal = a.qs_rank || 999999;
+          bVal = b.qs_rank || 999999;
+          break;
+        case "score":
+          aVal = scores[a.id]?.score || 0;
+          bVal = scores[b.id]?.score || 0;
+          break;
+      }
+
+      if (aVal < bVal) return order === "asc" ? -1 : 1;
+      if (aVal > bVal) return order === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+    setResults(sortPrograms(results, field, sortOrder === "asc" ? "desc" : "asc"));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      query: "",
+      country: "",
+      city: "",
+      region: "",
+      field_of_study: "",
+      degree_level: "",
+      language: "",
+      min_tuition: "",
+      max_tuition: "",
+      has_scholarship: false,
+      deadline_before: "",
+    });
+    setErrorMsg("");
+  };
 
 
 
@@ -255,15 +353,20 @@ params.set("countries", countries);
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Страна
               </label>
-              <input
-                type="text"
+              <select
                 value={filters.country}
                 onChange={(e) => handleFilterChange("country", e.target.value)}
                 className="input-field"
-                placeholder="DE, US, GB..."
-              />
+              >
+                <option value="">Все страны</option>
+                {POPULAR_COUNTRIES.map(c => (
+                  <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+                ))}
+                <option value="---custom---" disabled>─────────────</option>
+                <option value="">Другая (вводить вручную)</option>
+              </select>
               <p className="text-xs text-gray-500 mt-1">
-                Используй country code: DE, US, GB, FR, IT...
+                Или введи коды: DE, US, GB, FR (через запятую)
               </p>
             </div>
 
@@ -348,7 +451,7 @@ params.set("countries", countries);
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Мин. стоимость
+                Мин. стоимость ($)
               </label>
               <input
                 type="number"
@@ -358,12 +461,13 @@ params.set("countries", countries);
                 }
                 className="input-field"
                 placeholder="0"
+                min="0"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Макс. стоимость
+                Макс. стоимость ($)
               </label>
               <input
                 type="number"
@@ -373,6 +477,7 @@ params.set("countries", countries);
                 }
                 className="input-field"
                 placeholder="100000"
+                min="0"
               />
             </div>
 
@@ -391,37 +496,95 @@ params.set("countries", countries);
                 </span>
               </label>
             </div>
+
+            <div className="col-span-full flex gap-2 pt-2">
+              <button onClick={handleSearch} className="btn-primary">
+                Применить фильтры
+              </button>
+              <button onClick={clearFilters} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
+                Очистить
+              </button>
+            </div>
           </div>
         )}
       </div>
       
       {errorMsg && (
         <div className="mt-3 p-3 rounded border border-red-300 bg-red-50 text-red-700">
-          {errorMsg}
+          ⚠️ {errorMsg}
         </div>
       )}
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="text-gray-600">Загрузка...</div>
+          <div className="inline-block">
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-primary-600 rounded-full animate-spin"></div>
+          </div>
+          <div className="text-gray-600 mt-4">Загрузка программ...</div>
         </div>
       ) : results.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-600">
-            Результаты не найдены. Попробуйте изменить фильтры.
+          <p className="text-gray-600 text-lg">
+            📚 Результаты не найдены. Попробуйте изменить фильтры.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {results.map((result) => (
-            <ProgramCard 
-              key={result.id} 
-              result={result} 
-              score={scores[result.id]}
-              loadingScore={loadingScores[result.id]}
-            />
-          ))}
-          
+        <div>
+          <div className="card mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <p className="text-gray-700">
+                  <span className="font-bold text-lg text-primary-600">{results.length}</span>
+                  {" "}программ{results.length % 10 === 1 && results.length !== 11 ? "а" : results.length % 10 >= 2 && results.length % 10 <= 4 && (results.length < 10 || results.length > 20) ? "ы" : ""}
+                </p>
+              </div>
+
+              <div className="flex gap-2 flex-wrap md:flex-nowrap items-center">
+                <span className="text-sm text-gray-600">Сортировать по:</span>
+                <button
+                  onClick={() => handleSort("title")}
+                  className={`px-3 py-1 rounded text-sm font-medium transition ${
+                    sortField === "title"
+                      ? "bg-primary-100 text-primary-800"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Названию {sortField === "title" && (sortOrder === "asc" ? "↑" : "↓")}
+                </button>
+                <button
+                  onClick={() => handleSort("tuition")}
+                  className={`px-3 py-1 rounded text-sm font-medium transition ${
+                    sortField === "tuition"
+                      ? "bg-primary-100 text-primary-800"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Цене {sortField === "tuition" && (sortOrder === "asc" ? "↑" : "↓")}
+                </button>
+                <button
+                  onClick={() => handleSort("qs_rank")}
+                  className={`px-3 py-1 rounded text-sm font-medium transition ${
+                    sortField === "qs_rank"
+                      ? "bg-primary-100 text-primary-800"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Рейтингу {sortField === "qs_rank" && (sortOrder === "asc" ? "↑" : "↓")}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {results.map((result) => (
+              <ProgramCard 
+                key={result.id} 
+                result={result} 
+                score={scores[result.id]}
+                loadingScore={loadingScores[result.id]}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -463,41 +626,58 @@ function ProgramCard({
     }
   };
 
+  const getCategoryEmoji = (category?: string) => {
+    switch (category) {
+      case "reach":
+        return "🔴";
+      case "target":
+        return "🟡";
+      case "safety":
+        return "🟢";
+      default:
+        return "";
+    }
+  };
+
   return (
-    <div className="card">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="text-xl font-bold text-gray-900">
+    <div className="card hover:shadow-lg transition">
+      <div className="grid md:grid-cols-5 gap-4">
+        <div className="md:col-span-3">
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               {result.title}
             </h3>
             {score && (
-              <div className="flex flex-col items-end gap-1 ml-4">
+              <div className="flex flex-col items-end gap-1 ml-4 flex-shrink-0">
                 <div className={`px-4 py-2 rounded-lg border-2 font-bold text-lg ${getCategoryColor(score.category)}`}>
                   {score.score}%
                 </div>
                 <span className="text-xs font-medium text-gray-600">
-                  {getCategoryLabel(score.category)}
+                  {getCategoryEmoji(score.category)} {getCategoryLabel(score.category)}
                 </span>
               </div>
             )}
             {loadingScore && (
-              <div className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-600 text-sm">
-                Загрузка...
+              <div className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-600 text-sm animate-pulse flex-shrink-0">
+                ⏳
               </div>
             )}
           </div>
 
-          <p className="text-gray-600 mb-2">
-            <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-medium hover:underline">
+          <p className="text-gray-600 mb-3 font-medium">
+            <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-semibold hover:underline">
               {result.university_name}
             </Link>
-            {" • "}
-            {(result.city ? `${result.city}, ` : "")}
-            {result.country_code}
           </p>
 
-          <div className="flex flex-wrap gap-2 mb-2">
+          <p className="text-gray-500 text-sm mb-3">
+            {result.city ? `📍 ${result.city}, ` : ""}
+            {result.country_code}
+            {result.qs_rank && ` • QS Ranking: #${result.qs_rank}`}
+            {result.the_rank && ` • THE Ranking: #${result.the_rank}`}
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-3">
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
               {result.degree_level}
             </span>
@@ -509,21 +689,45 @@ function ProgramCard({
             </span>
             {result.has_scholarship && (
               <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                Стипендии доступны
+                💰 Стипендии доступны
               </span>
             )}
           </div>
+        </div>
 
-          {typeof result.tuition_amount === "number" && (
-            <p className="text-sm text-gray-600">
-              Стоимость: {result.tuition_amount.toLocaleString()}{" "}
-              {result.tuition_currency || ""}/год
-            </p>
-          )}
+        <div className="md:col-span-2 border-l border-gray-200 pl-4 flex flex-col justify-between">
+          <div>
+            {typeof result.tuition_amount === "number" && (
+              <div className="mb-3">
+                <p className="text-xs text-gray-500 mb-1">Стоимость в год</p>
+                <p className="text-2xl font-bold text-primary-600">
+                  ${formatTuition(result.tuition_amount)}
+                </p>
+                {result.tuition_currency && result.tuition_currency !== "USD" && (
+                  <p className="text-xs text-gray-500">{result.tuition_currency}/год</p>
+                )}
+              </div>
+            )}
 
-          {!!result.qs_rank && (
-            <p className="text-sm text-gray-600">QS Ranking: #{result.qs_rank}</p>
-          )}
+            {result.scholarship_type && (
+              <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-xs text-gray-600 mb-1">Тип стипендии</p>
+                <p className="text-sm font-medium text-gray-800">{result.scholarship_type}</p>
+                {result.scholarship_percent_min && result.scholarship_percent_max && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    {result.scholarship_percent_min}% - {result.scholarship_percent_max}%
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Link 
+            to={`/universities/${result.university_id}`}
+            className="btn-primary text-center block"
+          >
+            Подробнее
+          </Link>
         </div>
       </div>
     </div>

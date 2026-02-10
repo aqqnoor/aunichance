@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Results from './pages/Results';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
+import SmartSearch from './pages/SmartSearch';
 import University from "./pages/University";
 
 
@@ -58,6 +59,7 @@ function App() {
           element={<Profile profile={profile} setProfile={setProfile} />}
         />
         <Route path="/search" element={<Search />} />
+        <Route path="/smart-search" element={<SmartSearch />} />
         <Route path="/universities/:id" element={<University />} />
 
       </Route>

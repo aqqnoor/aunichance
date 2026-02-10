@@ -114,77 +114,147 @@ export default function Layout({ backendAvailable, recheckBackend }: { backendAv
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Navigation Header */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-gray-200/50 shadow-soft">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <Link to="/" className="flex items-center">
-                <span className="text-2xl font-bold text-primary-600">UniChance</span>
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-8">
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-primary rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="relative px-4 py-2 bg-gradient-primary rounded-xl">
+                    <span className="text-2xl font-black text-white">UC</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-2xl font-black bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">UniChance</span>
+                  <p className="text-xs text-gray-500 font-medium">Smart Matching</p>
+                </div>
               </Link>
 
-              <div className="hidden sm:ml-10 sm:flex sm:space-x-8">
-                <Link
-                  to="/"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    location.pathname === '/'
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Главная
-                </Link>
+              {/* Navigation Links */}
+              <div className="hidden sm:flex gap-1">
+                {[
+                  { path: '/', label: '🏠 Главная' },
+                  { path: '/search', label: '🔍 Поиск' },
+                  { path: '/smart-search', label: '✨ Умный поиск' },
+                  { path: '/profile', label: '👤 Профиль' },
+                ].map((link) => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={`
+                        relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300
+                        ${isActive
+                          ? 'bg-gradient-primary text-white shadow-medium'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        }
+                      `}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
 
-                <Link
-                  to="/search"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    location.pathname === '/search'
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Поиск
-                </Link>
-
-                <Link
-                  to="/profile"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    location.pathname === '/profile'
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Профиль
-                </Link>
+            {/* Right side - Status indicator */}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2">
+                {backendAvailable !== false ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-success-50 border border-success-200 rounded-lg">
+                    <span className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></span>
+                    <span className="text-xs font-medium text-success-700">Готов</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-warning-50 border border-warning-200 rounded-lg">
+                    <span className="w-2 h-2 bg-warning-500 rounded-full animate-pulse"></span>
+                    <span className="text-xs font-medium text-warning-700">Загрузка...</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </nav>
 
+      {/* Alert Banners */}
       {backendAvailable === false && (
-        <div className="bg-yellow-50 border-b border-yellow-200 text-yellow-800 text-center py-2 flex items-center justify-center gap-4">
-          <div className="flex flex-col sm:flex-row gap-2 items-center">
-            <div>Сервер временно недоступен — некоторые функции могут быть отключены.</div>
-            <div className="text-sm text-yellow-700">Автоповтор через {countdown}s</div>
-            {MAX_RETRIES > 0 && (
-              <div className="text-sm text-yellow-700">Попыток: {attempts}/{MAX_RETRIES}</div>
-            )}
+        <div className="bg-gradient-to-r from-warning-50 to-warning-100/50 border-b border-warning-200/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <p className="font-semibold text-warning-900">Сервер временно недоступен</p>
+                  <p className="text-sm text-warning-700">Некоторые функции могут быть отключены</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-warning-700 font-medium">Повтор через {countdown}s</span>
+                {MAX_RETRIES > 0 && (
+                  <span className="text-sm text-warning-700">({attempts}/{MAX_RETRIES})</span>
+                )}
+                <button 
+                  onClick={handleRetry} 
+                  className="ml-2 px-4 py-1.5 bg-white text-warning-700 rounded-lg text-sm font-medium hover:bg-warning-50 transition-colors border border-warning-300"
+                >
+                  Попробовать
+                </button>
+              </div>
+            </div>
           </div>
-          <button onClick={handleRetry} className="ml-2 px-3 py-1 bg-yellow-100 rounded text-yellow-800 text-sm">
-            Попробовать снова
-          </button>
-        </div>
-      )}
-      {recoveredVisible && (
-        <div className="bg-green-50 border-b border-green-200 text-green-800 text-center py-2">
-          Сервер восстановлен — все функции доступны.
         </div>
       )}
 
-      <main>
+      {recoveredVisible && (
+        <div className="bg-gradient-to-r from-success-50 to-success-100/50 border-b border-success-200/50 backdrop-blur-sm animate-fade-in">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+            <span className="text-xl">✅</span>
+            <p className="font-semibold text-success-900">Сервер восстановлен — все функции доступны</p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1">
         <Outlet />
       </main>
+
+      {/* Footer */}
+      <footer className="mt-16 border-t border-gray-200/50 bg-gradient-to-t from-gray-50 to-transparent backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Об UniChance</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Платформа для умного подбора и поступления в университеты
+              </p>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Ссылки</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/" className="text-gray-600 hover:text-primary-600 transition-colors">Главная</Link></li>
+                <li><Link to="/search" className="text-gray-600 hover:text-primary-600 transition-colors">Поиск</Link></li>
+                <li><Link to="/smart-search" className="text-gray-600 hover:text-primary-600 transition-colors">Умный поиск</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Статус</h3>
+              <p className="text-sm text-gray-600">
+                {backendAvailable === true ? '✅ Все системы работают' : '⚠️ Некоторые системы недоступны'}
+              </p>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 pt-6 text-center text-sm text-gray-500">
+            <p>© 2026 UniChance. Все права защищены.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

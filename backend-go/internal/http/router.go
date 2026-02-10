@@ -50,6 +50,9 @@ func NewRouter(d Deps) *echo.Echo {
 	// programs (public)
 	e.GET("/programs", d.ProgramsHandler.List)
 
+	// smart-search (protected)
+	e.GET("/programs/smart-search", d.ProgramsHandler.SmartSearch, appMw.RequireAuth(d.JwtSecret))
+
 	// profile (protected)
 	e.GET("/profile/me", d.ProfileHandler.GetMe, appMw.RequireAuth(d.JwtSecret))
 	e.POST("/profile/me", d.ProfileHandler.UpsertMe, appMw.RequireAuth(d.JwtSecret))

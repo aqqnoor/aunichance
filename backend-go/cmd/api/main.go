@@ -29,19 +29,19 @@ func main() {
 	}
 	defer pool.Close()
 
+	// profile + scoring endpoints
+	profRepo := profile.Repo{DB: pool}
+	profH := profile.Handler{Repo: profRepo, DB: pool}
+
 	// auth
 	authSvc := auth.Service{DB: pool, JwtSecret: cfg.JwtSecret}
 	authH := auth.Handler{Svc: authSvc}
 
 	// programs
 	progRepo := programs.Repo{DB: pool}
-	progH := programs.Handler{Repo: progRepo}
+	progH := programs.Handler{Repo: progRepo, DB: pool, ProfileRepo: profRepo}
 	uniRepo := universities.Repo{DB: pool}
 	uniH := universities.Handler{Repo: uniRepo}
-
-	// profile + scoring endpoints
-	profRepo := profile.Repo{DB: pool}
-	profH := profile.Handler{Repo: profRepo, DB: pool}
 
 	e := httpRouter.NewRouter(httpRouter.Deps{
 		AuthHandler:         authH,
