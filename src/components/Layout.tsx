@@ -138,8 +138,7 @@ export default function Layout({ backendAvailable, recheckBackend }: { backendAv
               <div className="hidden sm:flex gap-1">
                 {[
                   { path: '/', label: '🏠 Главная' },
-                  { path: '/search', label: '🔍 Поиск' },
-                  { path: '/smart-search', label: '✨ Умный поиск' },
+                  { path: '/search', label: '🔍 Поиск и умный анализ' },
                   { path: '/profile', label: '👤 Профиль' },
                 ].map((link) => {
                   const isActive = location.pathname === link.path;
@@ -240,7 +239,6 @@ export default function Layout({ backendAvailable, recheckBackend }: { backendAv
               <ul className="space-y-2 text-sm">
                 <li><Link to="/" className="text-gray-600 hover:text-primary-600 transition-colors">Главная</Link></li>
                 <li><Link to="/search" className="text-gray-600 hover:text-primary-600 transition-colors">Поиск</Link></li>
-                <li><Link to="/smart-search" className="text-gray-600 hover:text-primary-600 transition-colors">Умный поиск</Link></li>
               </ul>
             </div>
             <div>
