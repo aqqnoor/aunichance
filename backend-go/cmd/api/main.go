@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"fmt"
 
 	"github.com/joho/godotenv"
 
@@ -15,9 +17,20 @@ import (
 	"unichance-backend-go/internal/universities"
 )
 
-func main() {
-	_ = godotenv.Load(".env")
 
+
+func main() {
+	_ = os.Getenv("DATABASE_URL")
+	_ = os.Getenv("JWT_SECRET")
+	_ = godotenv.Load(".env")
+	// Загружаем .env из корня проекта
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Println("Warning: .env file not found, using system env")
+	}
+
+	fmt.Println("DB_URL from env:", os.Getenv("DATABASE_URL"))
+	fmt.Println("JWT from env:", os.Getenv("JWT_SECRET"))
 	cfg := config.Load()
 	if cfg.DatabaseURL == "" || cfg.JwtSecret == "" {
 		log.Fatal("DATABASE_URL and JWT_SECRET are required")

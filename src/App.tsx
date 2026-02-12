@@ -6,7 +6,6 @@ import { apiGet } from './lib/api';
 import Home from './pages/Home';
 import Results from './pages/Results';
 import Profile from './pages/Profile';
-import SearchUnified from './pages/SearchUnified';
 import University from "./pages/University";
 
 
@@ -57,8 +56,7 @@ function App() {
           path="/profile"
           element={<Profile profile={profile} setProfile={setProfile} />}
         />
-        <Route path="/search" element={<SearchUnified />} />
-        <Route path="/smart-search" element={<SearchUnified />} />
+
         <Route path="/universities/:id" element={<University />} />
 
       </Route>

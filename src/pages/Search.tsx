@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { apiGet, apiPost } from "../lib/api";
+import { API_BASE_URL, apiGet, apiPost } from "../lib/api";
 import { Link } from "react-router-dom";
 import { ScoreResult } from "../types";
+
+const response = await fetch(`${API_BASE_URL}/universities`)
+const data = await response.json()
 
 type SearchMode = "basic" | "smart";
 
