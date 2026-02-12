@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
 
 	"github.com/joho/godotenv"
 
@@ -12,12 +12,11 @@ import (
 	"unichance-backend-go/internal/config"
 	"unichance-backend-go/internal/db"
 	httpRouter "unichance-backend-go/internal/http"
+	"unichance-backend-go/internal/llm"
 	"unichance-backend-go/internal/profile"
 	"unichance-backend-go/internal/programs"
 	"unichance-backend-go/internal/universities"
 )
-
-
 
 func main() {
 	_ = os.Getenv("DATABASE_URL")
@@ -56,10 +55,15 @@ func main() {
 	uniRepo := universities.Repo{DB: pool}
 	uniH := universities.Handler{Repo: uniRepo}
 
+	// llm handler (proxy)
+	llmURL := os.Getenv("LLM_SERVICE_URL")
+	llmH := llm.Handler{DB: pool, ProfileRepo: profRepo, LLMURL: llmURL}
+
 	e := httpRouter.NewRouter(httpRouter.Deps{
 		AuthHandler:         authH,
 		ProgramsHandler:     progH,
 		ProfileHandler:      profH,
+		LLMHandler:          llmH,
 		JwtSecret:           cfg.JwtSecret,
 		UniversitiesHandler: uniH,
 	})

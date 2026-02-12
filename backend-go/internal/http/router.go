@@ -18,6 +18,7 @@ type Deps struct {
 	ProgramsHandler     programs.Handler
 	ProfileHandler      profile.Handler
 	UniversitiesHandler universities.Handler
+	LLMHandler          interface{}
 	JwtSecret           string
 }
 
@@ -49,6 +50,8 @@ func NewRouter(d Deps) *echo.Echo {
 
 	// programs (public)
 	e.GET("/programs", d.ProgramsHandler.List)
+	// alias for frontend compatibility
+	e.GET("/programs/search", d.ProgramsHandler.List)
 
 	// smart-search (protected)
 	e.GET("/programs/smart-search", d.ProgramsHandler.SmartSearch, appMw.RequireAuth(d.JwtSecret))
@@ -57,6 +60,14 @@ func NewRouter(d Deps) *echo.Echo {
 	e.GET("/profile/me", d.ProfileHandler.GetMe, appMw.RequireAuth(d.JwtSecret))
 	e.POST("/profile/me", d.ProfileHandler.UpsertMe, appMw.RequireAuth(d.JwtSecret))
 	e.POST("/score", d.ProfileHandler.ScoreProgram, appMw.RequireAuth(d.JwtSecret))
+
+	// LLM proxy (protected)
+	if d.LLMHandler != nil {
+		// use reflection to call method if present
+		if h, ok := d.LLMHandler.(interface{ ImprovementTips(echo.Context) error }); ok {
+			e.POST("/api/llm/improvement-tips", h.ImprovementTips, appMw.RequireAuth(d.JwtSecret))
+		}
+	}
 
 	// universities (public)
 	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
