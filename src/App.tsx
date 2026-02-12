@@ -10,6 +10,7 @@ import University from "./pages/University";
 
 
 import Layout from './components/Layout';
+import Search from './pages/Search';
 
 function App() {
   const [profile, setProfile] = useState<StudentProfile>({});
@@ -56,6 +57,8 @@ function App() {
           path="/profile"
           element={<Profile profile={profile} setProfile={setProfile} />}
         />
+
+        <Route path="/search" element={<Search />} />
 
         <Route path="/universities/:id" element={<University />} />
 

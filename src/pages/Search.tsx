@@ -3,8 +3,7 @@ import { API_BASE_URL, apiGet, apiPost } from "../lib/api";
 import { Link } from "react-router-dom";
 import { ScoreResult } from "../types";
 
-const response = await fetch(`${API_BASE_URL}/universities`)
-const data = await response.json()
+
 
 type SearchMode = "basic" | "smart";
 
@@ -198,7 +197,7 @@ export default function Search() {
         countries = "DE,US,GB,FR";
       }
 
-      params.set("countries", countries);
+      // params.set("countries", countries);
 
       const lvl = normalizeLevel(filters.degree_level);
       if (lvl) params.set("levels", lvl);
@@ -226,18 +225,34 @@ export default function Search() {
       params.set("page", "1");
       params.set("limit", "50");
 
-      const url = `/programs?${params.toString()}`;
+      const url = `/universities?${params.toString()}`;
       console.log("Request:", url);
 
-      const data = await apiGet<{ items: ProgramDTO[]; total?: number }>(url);
+      const response = await apiGet<{ data: any[]; total: number }>(url);
+      console.log("API data:", response.data?.length, response);
+      const programs = response.data || [];
+      // Преобразуем University в ProgramDTO
+      const formattedPrograms = programs.map((uni: any) => ({
+        id: uni.id,
+        university_id: uni.id,
+        title: uni.name,
+        university_name: uni.name,
+        degree_level: "Bachelor",
+        field: "Computer Science", 
+        language: "EN",
+        country_code: uni.country_code,
+        city: uni.city || "",
+        qs_rank: uni.qs_rank,
+        the_rank: uni.the_rank,
+        has_scholarship: false,
+        tuition_amount: undefined  // ← ЗДЕСЬ БЫЛО null, СТАЛО undefined
+      }));
 
-      console.log("API items:", data.items?.length, data);
-
-      const programs = data.items || [];
-      setResults(sortPrograms(programs, sortField, sortOrder));
+      setResults(sortPrograms(formattedPrograms, sortField, sortOrder));
+      console.log("✅ results после setResults:", formattedPrograms.length, formattedPrograms);
 
       // Load scores for all programs (if user is authenticated)
-      loadScoresForPrograms(programs);
+      loadScoresForPrograms(response.data || []);
     } catch (error) {
       console.error("Search error:", error);
       setErrorMsg(error instanceof Error ? error.message : String(error));
@@ -934,6 +949,7 @@ function ProgramCard({
           >
             Подробнее
           </Link>
+          
         </div>
       </div>
     </div>

@@ -89,3 +89,46 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
 
 	return &u, nil
 }
+
+func (r *Repo) List(ctx context.Context, limit, offset int) ([]University, int64, error) {
+	var total int64
+	var universities []University
+
+	// Считаем общее количество
+	err := r.DB.QueryRow(ctx, "SELECT COUNT(*) FROM universities").Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Получаем университеты с пагинацией — ТОЛЬКО те поля, которые РЕАЛЬНО есть в таблице
+	rows, err := r.DB.Query(ctx, `
+		SELECT id, name, country_code, city, website, qs_rank, the_rank, data_updated_at
+		FROM universities 
+		ORDER BY name 
+		LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u University
+		err := rows.Scan(
+			&u.ID,
+			&u.Name,
+			&u.CountryCode,
+			&u.City,
+			&u.Website,
+			&u.QSRank,
+			&u.THERank,
+			&u.DataUpdatedAt,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+		universities = append(universities, u)
+	}
+
+	return universities, total, nil
+}

@@ -16,86 +16,85 @@ export default function Layout({ backendAvailable, recheckBackend }: { backendAv
   const [recoveredVisible, setRecoveredVisible] = useState<boolean>(false);
   const prevAvailable = useRef<boolean | null>(null);
 
-  useEffect(() => {
-    // show recovered indicator when backend flips from false -> true
-    if (prevAvailable.current === false && backendAvailable === true) {
-      setRecoveredVisible(true);
-      setTimeout(() => setRecoveredVisible(false), 3000);
-      setAttempts(0);
-      setCurrentInterval(RETRY_INTERVAL);
-    }
+  // useEffect(() => {
+  //   // show recovered indicator when backend flips from false -> true
+  //   if (prevAvailable.current === false && backendAvailable === true) {
+  //     setRecoveredVisible(true);
+  //     setTimeout(() => setRecoveredVisible(false), 3000);
+  //     setAttempts(0);
+  //     setCurrentInterval(RETRY_INTERVAL);
+  //   }
 
-    // start countdown only if backend is unavailable
-    if (backendAvailable === false) {
+  //   // start countdown only if backend is unavailable
+  //   if (backendAvailable === false) {
+  //     setCountdown(currentInterval);
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //     }
+  //     intervalRef.current = window.setInterval(() => {
+  //       setCountdown((c) => c - 1);
+  //     }, 1000);
+  //   } else {
+  //     // clear interval when backend becomes available
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //       intervalRef.current = null;
+  //     }
+  //   }
+
+  //   prevAvailable.current = backendAvailable ?? null;
+
+  //   return () => {
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //       intervalRef.current = null;
+  //     }
+  //   };
+  // }, [backendAvailable, currentInterval]);
+
+  useEffect(() => {
+    // Только когда таймер доходит до 0 И бэкенд недоступен
+    if (countdown > 0 || backendAvailable !== false) return;
+    
+    // auto retry
+    if (!AUTO_RETRY) {
       setCountdown(currentInterval);
+      return;
+    }
+
+    if (MAX_RETRIES > 0 && attempts >= MAX_RETRIES) {
+      // reached max attempts, stop auto retry
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
-      intervalRef.current = window.setInterval(() => {
-        setCountdown((c) => c - 1);
-      }, 1000);
+      return;
+    }
+
+    if (recheckBackend) {
+      setAttempts((a) => a + 1);
+      recheckBackend()
+        .then(() => {
+          // recovered
+          setAttempts(0);
+          setCurrentInterval(RETRY_INTERVAL);
+          setRecoveredVisible(true);
+          setTimeout(() => setRecoveredVisible(false), 3000);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        })
+        .catch(() => {
+          // failed -> increase interval (exponential backoff)
+          const next = Math.min((currentInterval || RETRY_INTERVAL) * 2, MAX_INTERVAL);
+          setCurrentInterval(next);
+          setCountdown(next);
+        });
     } else {
-      // clear interval when backend becomes available
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      setCountdown(currentInterval);
     }
-
-    prevAvailable.current = backendAvailable ?? null;
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [backendAvailable, currentInterval]);
-
-  useEffect(() => {
-    if (countdown <= 0 && backendAvailable === false) {
-      // auto retry
-      if (!AUTO_RETRY) {
-        // reset countdown but do not auto retry
-        setCountdown(currentInterval);
-        return;
-      }
-
-      if (MAX_RETRIES > 0 && attempts >= MAX_RETRIES) {
-        // reached max attempts, stop auto retry
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-        return;
-      }
-
-      if (recheckBackend) {
-        setAttempts((a) => a + 1);
-        recheckBackend()
-          .then(() => {
-            // recovered
-            setAttempts(0);
-            setCurrentInterval(RETRY_INTERVAL);
-            setRecoveredVisible(true);
-            setTimeout(() => setRecoveredVisible(false), 3000);
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
-          })
-          .catch(() => {
-            // failed -> increase interval (exponential backoff)
-            const next = Math.min((currentInterval || RETRY_INTERVAL) * 2, MAX_INTERVAL);
-            setCurrentInterval(next);
-            setCountdown(next);
-          });
-      } else {
-        setCountdown(currentInterval);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countdown, backendAvailable, currentInterval, attempts]);
+  }, [countdown, backendAvailable, attempts]); // убрал currentInterval из зависимостей
 
   const handleRetry = async () => {
     setCountdown(RETRY_INTERVAL);

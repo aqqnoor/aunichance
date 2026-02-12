@@ -60,6 +60,7 @@ func NewRouter(d Deps) *echo.Echo {
 
 	// universities (public)
 	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
+	e.GET("/universities", d.UniversitiesHandler.List) // ← добавить эту строку
 
 	return e
 }

@@ -1,0 +1,36 @@
+name,country_code,city,website,qs_rank,the_rank,data_updated_at
+University of Stuttgart,DE,Stuttgart,https://www.uni-stuttgart.de,312,251,2026-01-01T00:00:00Z
+Technical University of Munich,DE,Munich,https://www.tum.de,50,50,2026-01-01T00:00:00Z
+RWTH Aachen University,DE,Aachen,https://www.rwth-aachen.de,136,133,2026-01-01T00:00:00Z
+University of Freiburg,DE,Freiburg,https://www.uni-freiburg.de,192,176,2026-01-01T00:00:00Z
+Karlsruhe Institute of Technology,DE,Karlsruhe,https://www.kit.edu,149,145,2026-01-01T00:00:00Z
+Ludwig Maximilian University of Munich,DE,Munich,https://www.lmu.de,63,63,2026-01-01T00:00:00Z
+Heidelberg University,DE,Heidelberg,https://www.uni-heidelberg.de,64,64,2026-01-01T00:00:00Z
+    Humboldt University of Berlin,DE,Berlin,https://www.hu-berlin.de,75,75,2026-01-01T00:00:00Z
+Free University of Berlin,DE,Berlin,https://www.fu-berlin.de,130,126,2026-01-01T00:00:00Z
+Technical University of Berlin,DE,Berlin,https://www.tu-berlin.de,194,178,2026-01-01T00:00:00Z
+University of Tübingen,DE,Tübingen,https://www.uni-tuebingen.de,245,229,2026-01-01T00:00:00Z
+University of Bonn,DE,Bonn,https://www.uni-bonn.de,194,178,2026-01-01T00:00:00Z
+University of Hamburg,DE,Hamburg,https://www.uni-hamburg.de,210,193,2026-01-01T00:00:00Z
+Goethe University Frankfurt,DE,Frankfurt,https://www.uni-frankfurt.de,176,162,2026-01-01T00:00:00Z
+University of Cologne,DE,Cologne,https://www.uni-koeln.de,219,202,2026-01-01T00:00:00Z
+University of Leipzig,DE,Leipzig,https://www.uni-leipzig.de,318,258,2026-01-01T00:00:00Z
+University of Würzburg,DE,Würzburg,https://www.uni-wuerzburg.de,251,234,2026-01-01T00:00:00Z
+University of Münster,DE,Münster,https://www.uni-muenster.de,298,246,2026-01-01T00:00:00Z
+University of Erlangen-Nuremberg,DE,Erlangen,https://www.fau.eu,242,226,2026-01-01T00:00:00Z
+University of Göttingen,DE,Göttingen,https://www.uni-goettingen.de,266,239,2026-01-01T00:00:00Z
+University of Duisburg-Essen,DE,Duisburg,https://www.uni-due.de,351,287,2026-01-01T00:00:00Z
+University of Potsdam,DE,Potsdam,https://www.uni-potsdam.de,387,318,2026-01-01T00:00:00Z
+University of Kassel,DE,Kassel,https://www.uni-kassel.de,417,344,2026-01-01T00:00:00Z
+University of Siegen,DE,Siegen,https://www.uni-siegen.de,465,374,2026-01-01T00:00:00Z
+University of Hildesheim,DE,Hildesheim,https://www.uni-hildesheim.de,501-510,400,2026-01-01T00:00:00Z
+University of Applied Sciences Würzburg-Schweinfurt,DE,Würzburg,https://www.fhws.de,601-650,500,2026-01-01T00:00:00Z
+University of Applied Sciences Augsburg,DE,Augsburg,https://www.hs-augsburg.de,701-750,600,2026-01-01T00:00:00Z
+University of Applied Sciences Darmstadt,DE,Darmstadt,https://www.h-da.de,701-750,600,2026-01-01T00:00:00Z
+University of Applied Sciences Kaiserslautern,DE,Kaiserslautern,https://www.hs-kl.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Lübeck,DE,Lübeck,https://www.fh-luebeck.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Offenburg,DE,Offenburg,https://www.hs-offenburg.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Ravensburg-Weingarten,DE,Ravensburg,https://www.hs-weingarten.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Stralsund,DE,Stralsund,https://www.hochschule-stralsund.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Trier,DE,Trier,https://www.hochschule-trier.de,801-1000,700,2026-01-01T00:00:00Z
+University of Applied Sciences Ulm,DE,Ulm,https://www.hs-ulm.de,801-1000,700,2026-01-01T00:00:00Z

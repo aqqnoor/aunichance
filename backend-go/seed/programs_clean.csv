@@ -1,0 +1,37 @@
+title,degree_level,field,language,tuition_amount,tuition_currency,has_scholarship,scholarship_type,scholarship_percent_min,scholarship_percent_max,description,data_updated_at
+Computer Science,bachelor,CS,EN,1500,EUR,true,merit,10,50,,2026-01-01T00:00:00Z
+Data Science,master,Data,EN,55000,USD,true,need-based,5,30,,2026-01-01T00:00:00Z
+Mechanical Engineering,bachelor,Engineering,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Civil Engineering,master,Engineering,DE,0,EUR,true,merit,15,40,,2026-01-01T00:00:00Z
+Biology,bachelor,Science,EN,1500,EUR,true,need-based,10,25,,2026-01-01T00:00:00Z
+Electrical Engineering,master,Engineering,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+History,bachelor,Arts,DE,0,EUR,true,merit,5,20,,2026-01-01T00:00:00Z
+Medicine,master,Health,EN,3000,EUR,true,need-based,10,30,,2026-01-01T00:00:00Z
+Law,bachelor,Law,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Political Science,master,Social Sciences,EN,2000,EUR,true,merit,10,35,,2026-01-01T00:00:00Z
+Architecture,bachelor,Design,DE,0,EUR,true,need-based,5,15,,2026-01-01T00:00:00Z
+Philosophy,master,Humanities,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Economics,bachelor,Economics,EN,1500,EUR,true,merit,10,30,,2026-01-01T00:00:00Z
+Psychology,master,Science,DE,0,EUR,true,need-based,5,20,,2026-01-01T00:00:00Z
+Finance,bachelor,Business,EN,2000,EUR,true,merit,15,40,,2026-01-01T00:00:00Z
+Marketing,master,Business,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+English Literature,bachelor,Arts,EN,1500,EUR,true,need-based,10,25,,2026-01-01T00:00:00Z
+Chemistry,master,Science,DE,0,EUR,true,merit,10,30,,2026-01-01T00:00:00Z
+Sociology,bachelor,Social Sciences,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Physics,master,Science,EN,2500,EUR,true,need-based,15,35,,2026-01-01T00:00:00Z
+Mathematics,bachelor,Science,DE,0,EUR,true,merit,5,20,,2026-01-01T00:00:00Z
+Business Administration,master,Business,EN,3000,EUR,true,need-based,10,30,,2026-01-01T00:00:00Z
+Environmental Science,bachelor,Science,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Social Work,master,Social Sciences,DE,0,EUR,true,merit,5,15,,2026-01-01T00:00:00Z
+Media Studies,bachelor,Arts,EN,1500,EUR,true,need-based,10,25,,2026-01-01T00:00:00Z
+Education,master,Education,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Information Technology,bachelor,CS,DE,0,EUR,true,merit,10,30,,2026-01-01T00:00Z
+Industrial Design,master,Design,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Mechanical Engineering,bachelor,Engineering,DE,0,EUR,true,need-based,5,20,,2026-01-01T00:00:00Z
+Civil Engineering,master,Engineering,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Health Sciences,bachelor,Health,DE,0,EUR,true,merit,10,25,,2026-01-01T00:00:00Z
+Business Informatics,master,CS,EN,2000,EUR,true,need-based,15,35,,2026-01-01T00:00:00Z
+Electrical Engineering,bachelor,Engineering,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z
+Maritime Studies,master,Science,EN,1500,EUR,true,merit,10,30,,2026-01-01T00:00:00Z
+Tourism Management,bachelor,Business,DE,0,EUR,true,need-based,5,15,,2026-01-01T00:00:00Z
+Computer Engineering,master,CS,DE,0,EUR,false,,0,0,,2026-01-01T00:00:00Z

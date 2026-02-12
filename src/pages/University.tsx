@@ -59,16 +59,16 @@ export default function University() {
   const [programScore, setProgramScore] = useState<ScoreResult | null>(null);
   const [loadingScore, setLoadingScore] = useState(false);
 
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    setErr("");
+  // useEffect(() => {
+  //   if (!id) return;
+  //   setLoading(true);
+  //   setErr("");
 
-    apiGet<UniversityDTO>(`/universities/${id}`)
-      .then(setData)
-      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false));
-  }, [id]);
+  //   apiGet<UniversityDTO>(`/universities/${id}`)
+  //     .then(setData)
+  //     .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+  //     .finally(() => setLoading(false));
+  // }, [id]);
 
   const loadProgramScore = async (programId: string) => {
     const token = localStorage.getItem("token");

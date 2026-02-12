@@ -7,6 +7,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/lib/pq v1.11.2
 	golang.org/x/crypto v0.27.0
 )
 
