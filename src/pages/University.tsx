@@ -58,17 +58,22 @@ export default function University() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [programScore, setProgramScore] = useState<ScoreResult | null>(null);
   const [loadingScore, setLoadingScore] = useState(false);
+  const [tips, setTips] = useState<any[]>([]);
+  const [loadingTips, setLoadingTips] = useState(false);
 
-  // useEffect(() => {
-  //   if (!id) return;
-  //   setLoading(true);
-  //   setErr("");
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setErr("");
 
-  //   apiGet<UniversityDTO>(`/universities/${id}`)
-  //     .then(setData)
-  //     .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
-  //     .finally(() => setLoading(false));
-  // }, [id]);
+    apiGet<UniversityDTO>(`/universities/${id}`)
+      .then((res) => setData(res))
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const loadProgramScore = async (programId: string) => {
     const token = localStorage.getItem("token");
@@ -88,6 +93,23 @@ export default function University() {
       setProgramScore(null);
     } finally {
       setLoadingScore(false);
+    }
+  };
+
+  const getImprovementTips = async () => {
+    if (!selectedProgramId) return;
+
+    setLoadingTips(true);
+    setTips([]);
+    try {
+      const data = await apiPost<any[]>('/api/llm/improvement-tips', { program_id: selectedProgramId });
+      setTips(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Failed to fetch improvement tips', e);
+      alert('Не удалось получить советы от AI: ' + (e instanceof Error ? e.message : String(e)));
+      setTips([]);
+    } finally {
+      setLoadingTips(false);
     }
   };
 
@@ -292,6 +314,50 @@ export default function University() {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              {/* AI improvement tips */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">🤖 AI-советник</h3>
+
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-3">Получите персональные советы, как повысить шансы на поступление для выбранной программы.</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={getImprovementTips}
+                      className="btn-primary"
+                      disabled={loadingTips}
+                    >
+                      {loadingTips ? 'Анализируем...' : '🔮 Как повысить шансы?'}
+                    </button>
+                    <Link to="/profile" className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
+                      Редактировать профиль
+                    </Link>
+                  </div>
+                </div>
+
+                {tips.length > 0 && (
+                  <div className="space-y-3">
+                    {tips.map((tip, idx) => (
+                      <div key={idx} className="p-3 bg-white rounded border border-blue-200">
+                        <p className="font-medium text-blue-800">{tip.title || tip.tip_text || tip.title}</p>
+                        <p className="text-sm text-gray-600 mt-1">{tip.description || tip.tip_text || ''}</p>
+                        {tip.resources && tip.resources.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500">Ресурсы:</p>
+                            <ul className="list-disc list-inside text-sm">
+                              {tip.resources.map((url: string, i: number) => (
+                                <li key={i}>
+                                  <a href={url} target="_blank" className="text-primary-600 hover:underline" rel="noreferrer">{url}</a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

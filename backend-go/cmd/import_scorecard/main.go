@@ -15,10 +15,10 @@ import (
 )
 
 type ScorecardSchool struct {
-	ID   int `json:"id"`
-	Name struct {
-		Institution string `json:"institution"`
-	} `json:"school"`
+	ID     int `json:"id"`
+	School struct {
+		Name string `json:"name"` // ← БЫЛО Institution, СТАЛО name
+	} `json:"school"` // ← БЫЛО Name.Institution
 	Admissions struct {
 		AdmissionRateOverall *float64 `json:"latest.admissions.admission_rate.overall"`
 		SatAverageOverall    *float64 `json:"latest.admissions.sat_scores.average.overall"`
@@ -87,20 +87,16 @@ func ImportScorecardToDB(db *sql.DB) error {
 					name, country_code, acceptance_rate, sat_average, 
 					tuition_in_state, source, last_updated
 				) VALUES ($1, 'US', $2, $3, $4, 'college_scorecard', $5)
-				ON CONFLICT (name) DO UPDATE SET
-					acceptance_rate = EXCLUDED.acceptance_rate,
-					sat_average = EXCLUDED.sat_average,
-					tuition_in_state = EXCLUDED.tuition_in_state,
-					last_updated = EXCLUDED.last_updated
+				
 			`,
-				school.Name.Institution,
+				school.School.Name,
 				school.Admissions.AdmissionRateOverall,
 				school.Admissions.SatAverageOverall,
 				school.Cost.TuitionInState,
 				time.Now(),
 			)
 			if err != nil {
-				fmt.Printf("Error inserting %s: %v\n", school.Name.Institution, err)
+				fmt.Printf("Error inserting %s: %v\n", school.School.Name, err)
 			}
 		}
 

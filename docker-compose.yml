@@ -13,5 +13,82 @@ services:
     volumes:
       - unichance_pg:/var/lib/postgresql/data
 
+  llm_service:
+    build:
+      context: ./llm_service
+      dockerfile: Dockerfile
+    container_name: unichance_llm
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://unichance:unichance@db:5432/unichance?sslmode=disable
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./llm_service:/app
+    restart: unless-stopped
+    networks:
+      - unichance_net
+
+  backend:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile
+    container_name: unichance_backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://unichance:unichance@db:5432/unichance?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      COLLEGE_SCORECARD_KEY: ${COLLEGE_SCORECARD_KEY}
+    depends_on:
+      - db
+      - llm_service
+    volumes:
+      - ./backend-go:/app
+    networks:
+      - unichance_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: unichance_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://backend:8080
+    depends_on:
+      - backend
+    volumes:
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+    networks:
+      - unichance_net
+
+  parser_scheduler:
+    build:
+      context: ./backend-go
+      dockerfile: Dockerfile.parser
+    container_name: unichance_parser
+    environment:
+      DATABASE_URL: postgresql://unichance:unichance@db:5432/unichance?sslmode=disable
+    depends_on:
+      - db
+    command: >
+      sh -c "
+      echo '0 2 * * * cd /app && go run parsers/runner.go' | crontab - &&
+      crond -f
+      "
+    networks:
+      - unichance_net
+
 volumes:
   unichance_pg:
+
+networks:
+  unichance_net:
+    driver: bridge

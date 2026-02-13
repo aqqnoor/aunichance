@@ -175,7 +175,7 @@ export default function Search() {
 
       const params = new URLSearchParams();
 
-      // Backend expects: q, countries, levels, min_tuition, max_tuition, scholarship, page, limit
+      // Backend expects: q, country, degree, field, min_tuition, max_tuition, scholarship, page, limit
       if (filters.query) params.set("q", filters.query.trim());
       // countries: manual OR from region OR MVP default
       let countries = (filters.country || "").replace(/\s+/g, "");
@@ -197,22 +197,20 @@ export default function Search() {
         countries = "DE,US,GB,FR";
       }
 
-      // params.set("countries", countries);
+      if (countries) params.set("country", countries);
 
       const lvl = normalizeLevel(filters.degree_level);
-      if (lvl) params.set("levels", lvl);
+      if (lvl) params.set("degree", lvl);
 
       if (filters.city && filters.city.trim() !== "") {
         params.set("city", filters.city.trim());
       }
 
       if (filters.field_of_study && filters.field_of_study.trim() !== "") {
-        // backend-go expects "fields"
-        params.set("fields", filters.field_of_study.trim());
+        params.set("field", filters.field_of_study.trim());
       }
 
       if (filters.language && filters.language !== "Все языки") {
-        // сенің dropdown value "Все языки" болуы мүмкін
         params.set("language", filters.language);
       }
 
@@ -231,25 +229,29 @@ export default function Search() {
       const response = await apiGet<{ data: any[]; total: number }>(url);
       console.log("API data:", response.data?.length, response);
       const programs = response.data || [];
-      // Преобразуем University в ProgramDTO
-      const formattedPrograms = programs.map((uni: any) => ({
-        id: uni.id,
-        university_id: uni.id,
-        title: uni.name,
-        university_name: uni.name,
-        degree_level: "Bachelor",
-        field: "Computer Science", 
-        language: "EN",
-        country_code: uni.country_code,
-        city: uni.city || "",
-        qs_rank: uni.qs_rank,
-        the_rank: uni.the_rank,
+      // Map backend program objects to ProgramDTO
+      const formattedPrograms = programs.map((p: any) => ({
+        id: p.id,
+        university_id: p.id,  // ← УНИВЕРСИТЕТ! Его ID — это и есть university_id
+        title: p.name || p.title || "Без названия",  // ← Берём name из университета
+        university_name: p.name || p.university_name || "Без названия",
+        country_code: p.country_code || "US",
+        city: p.city || "",
+        qs_rank: p.qs_rank,
+        the_rank: p.the_rank,
+        degree_level: filters.degree_level || "master", // из фильтра
+        field: filters.field_of_study || "Computer Science",
+        language: filters.language || "EN",
         has_scholarship: false,
-        tuition_amount: undefined  // ← ЗДЕСЬ БЫЛО null, СТАЛО undefined
+        tuition_amount: undefined,
+        tuition_currency: undefined,
+        scholarship_type: null,
+        scholarship_percent_min: null,
+        scholarship_percent_max: null
       }));
 
       setResults(sortPrograms(formattedPrograms, sortField, sortOrder));
-      console.log("✅ results после setResults:", formattedPrograms.length, formattedPrograms);
+      console.log("🔥 Первый элемент formattedPrograms:", formattedPrograms[0]);
 
       // Load scores for all programs (if user is authenticated)
       loadScoresForPrograms(response.data || []);
@@ -855,7 +857,7 @@ function ProgramCard({
             <div className="flex-1">
               <div className="flex items-start gap-2">
                 <h3 className="text-xl font-bold text-gray-900 mb-2 flex-1">
-                  {result.title}
+                   {result.title || result.university_name|| "Без названия"}
                 </h3>
                 {onToggleFavorite && (
                   <button
@@ -886,9 +888,15 @@ function ProgramCard({
           </div>
 
           <p className="text-gray-600 mb-3 font-medium">
-            <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-semibold hover:underline">
-              {result.university_name}
-            </Link>
+            {result.university_id && result.university_id !== "undefined" ? (
+              <Link to={`/universities/${result.university_id}`} className="text-primary-600 font-semibold hover:underline">
+                {result.university_name}
+              </Link>
+            ) : (
+              <span className="text-gray-600 font-semibold">
+                {result.university_name}
+              </span>
+            )}
           </p>
 
           <p className="text-gray-500 text-sm mb-3">
