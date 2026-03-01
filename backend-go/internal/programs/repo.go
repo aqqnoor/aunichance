@@ -12,6 +12,10 @@ type Repo struct { DB *pgxpool.Pool }
 
 type ListParams struct {
   Q string
+  // UseILikeFallback включает дополнительный ILIKE-поиск
+  // по названию программы / направлению / университету,
+  // поверх основного FTS. По умолчанию выключен.
+  UseILikeFallback bool
   Countries []string
   Levels []string
   Fields []string
@@ -34,9 +38,22 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
   add := func(cond string, val any) { args = append(args, val); where = append(where, fmt.Sprintf(cond, len(args))) }
 
   // q (FTS)
+  ftsArgPos := 0
   useFTS := strings.TrimSpace(p.Q) != ""
   if useFTS {
     add("programs.search_vector @@ plainto_tsquery('simple', $%d)", p.Q)
+    ftsArgPos = len(args)
+
+    if p.UseILikeFallback {
+      // Дополнительный (опциональный) fallback-поиск через ILIKE.
+      pattern := "%" + p.Q + "%"
+      args = append(args, pattern)
+      patPos := len(args)
+      where = append(where, fmt.Sprintf(
+        "(programs.title ILIKE $%d OR programs.field ILIKE $%d OR universities.name ILIKE $%d)",
+        patPos, patPos, patPos,
+      ))
+    }
   }
 
   if len(p.Countries) > 0 {
@@ -69,7 +86,11 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
   // sort
   orderSQL := "universities.qs_rank ASC NULLS LAST, universities.the_rank ASC NULLS LAST, programs.title ASC"
   if useFTS && (p.Sort == "" || p.Sort == "relevance") {
-    orderSQL = "ts_rank(programs.search_vector, plainto_tsquery('simple', $1)) DESC, " + orderSQL
+    // Используем тот же параметр, что и в WHERE, чтобы не было "магических" $1.
+    orderSQL = fmt.Sprintf(
+      "ts_rank(programs.search_vector, plainto_tsquery('simple', $%d)) DESC, %s",
+      ftsArgPos, orderSQL,
+    )
   } else {
     switch p.Sort {
     case "tuition_asc":
