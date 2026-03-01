@@ -14,6 +14,7 @@ import (
 type Handler struct {
   Repo Repo
   DB *pgxpool.Pool
+  Scorer scoring.Scorer
 }
 
 func (h Handler) GetMe(c echo.Context) error {
@@ -71,7 +72,12 @@ func (h Handler) ScoreProgram(c echo.Context) error {
   hasAchievements := (prof.Awards != nil && *prof.Awards != "") || 
                      (prof.AchievementsSummary != nil && *prof.AchievementsSummary != "")
 
-  res := scoring.Compute(scoring.Profile{
+  scorer := h.Scorer
+  if scorer == nil {
+    scorer = scoring.HeuristicScorer{}
+  }
+
+  res := scorer.Compute(scoring.Profile{
     GPA: prof.GPA, GPAScale: prof.GPAScale,
     IELTS: prof.IELTS, TOEFL: prof.TOEFL, SAT: prof.SAT,
     BudgetYear: prof.BudgetYear,

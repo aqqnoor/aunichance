@@ -2,6 +2,13 @@ package scoring
 
 import "math"
 
+// Scorer описывает абстрактный сервис скоринга.
+// Это позволяет в будущем подменить heuristic-реализацию на ML-модель
+// без изменения HTTP-слоя и контрактов API.
+type Scorer interface {
+  Compute(Profile, Requirements) Result
+}
+
 type Profile struct {
   GPA *float64
   GPAScale *float64
@@ -33,7 +40,12 @@ type Result struct {
   Reasons []string `json:"reasons"`
 }
 
-func Compute(p Profile, r Requirements) Result {
+// HeuristicScorer — текущая rule-based реализация скоринга.
+// Не является гарантией поступления, используется только как ориентир.
+type HeuristicScorer struct{}
+
+// Compute реализует heuristic-алгоритм на основе профиля и требований программы.
+func (HeuristicScorer) Compute(p Profile, r Requirements) Result {
   score := 0
   reasons := []string{}
   breakdown := Breakdown{}
@@ -157,6 +169,12 @@ func Compute(p Profile, r Requirements) Result {
     Breakdown: breakdown,
     Reasons: reasons,
   }
+}
+
+// Compute сохраняет совместимость с существующим кодом,
+// проксируя вызов к HeuristicScorer.
+func Compute(p Profile, r Requirements) Result {
+  return HeuristicScorer{}.Compute(p, r)
 }
 
 func clamp01(x float64) float64 {

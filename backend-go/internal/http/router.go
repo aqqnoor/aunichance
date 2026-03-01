@@ -39,19 +39,50 @@ func NewRouter(d Deps) *echo.Echo {
 		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
 
+	// Centralized JSON error handler
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if c.Response().Committed {
+			return
+		}
+
+		code := 500
+		message := "internal server error"
+
+		if he, ok := err.(*echo.HTTPError); ok {
+			code = he.Code
+			if m, ok := he.Message.(string); ok {
+				message = m
+			} else if he.Message != nil {
+				message = fmt.Sprint(he.Message)
+			} else {
+				message = http.StatusText(code)
+			}
+		}
+
+		_ = c.JSON(code, map[string]any{
+			"error": map[string]any{
+				"code":    code,
+				"message": message,
+				"details": nil,
+			},
+		})
+	}
+
 	e.GET("/health", func(c echo.Context) error { return c.String(200, "ok") })
 
 	// auth (public)
-	e.POST("/auth/register", d.AuthHandler.Register)
-	e.POST("/auth/login", d.AuthHandler.Login)
+	authLimiter := echoMw.RateLimiter(echoMw.NewRateLimiterMemoryStore(20))
+	e.POST("/auth/register", d.AuthHandler.Register, authLimiter)
+	e.POST("/auth/login", d.AuthHandler.Login, authLimiter)
 
 	// auth/me (protected)
 	e.GET("/auth/me", d.AuthHandler.Me, appMw.RequireAuth(d.JwtSecret))
 
 	// programs (public)
-	e.GET("/programs", d.ProgramsHandler.List)
+	searchLimiter := echoMw.RateLimiter(echoMw.NewRateLimiterMemoryStore(60))
+	e.GET("/programs", d.ProgramsHandler.List, searchLimiter)
 	// alias for frontend compatibility
-	e.GET("/programs/search", d.ProgramsHandler.List)
+	e.GET("/programs/search", d.ProgramsHandler.List, searchLimiter)
 
 	// smart-search (protected)
 	e.GET("/programs/smart-search", d.ProgramsHandler.SmartSearch, appMw.RequireAuth(d.JwtSecret))

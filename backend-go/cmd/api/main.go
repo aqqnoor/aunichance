@@ -17,6 +17,7 @@ import (
 	"unichance-backend-go/internal/profile"
 	"unichance-backend-go/internal/programs"
 	"unichance-backend-go/internal/universities"
+	"unichance-backend-go/internal/scoring"
 )
 
 func main() {
@@ -43,8 +44,9 @@ func main() {
 	defer pool.Close()
 
 	// profile + scoring endpoints
+	scorer := scoring.HeuristicScorer{}
 	profRepo := profile.Repo{DB: pool}
-	profH := profile.Handler{Repo: profRepo, DB: pool}
+	profH := profile.Handler{Repo: profRepo, DB: pool, Scorer: scorer}
 
 	// auth
 	authSvc := auth.Service{DB: pool, JwtSecret: cfg.JwtSecret}

@@ -13,21 +13,50 @@
 
 ## 🚀 Быстрый старт
 
-### Установка зависимостей
+### Backend (Go + PostgreSQL)
+
+1. Настройте переменные окружения:
+
+```bash
+export DATABASE_URL=postgres://user:password@localhost:5432/unichance?sslmode=disable
+export JWT_SECRET=your-secret-key
+```
+
+2. Примените миграции (пример для psql, порядок по номеру файла):
+
+```bash
+cd backend-go/migrations
+psql "$DATABASE_URL" -f 001_init.sql
+psql "$DATABASE_URL" -f 002_profile_and_scores.sql
+psql "$DATABASE_URL" -f 003_updated_at_and_search_vector.sql
+psql "$DATABASE_URL" -f 004_sources_links_fetchlog.sql
+psql "$DATABASE_URL" -f 005_smart_matching.sql
+psql "$DATABASE_URL" -f 010_drop_shortlists.sql
+psql "$DATABASE_URL" -f 011_search_vector_fix.sql
+psql "$DATABASE_URL" -f 012_degree_level_enum.sql
+psql "$DATABASE_URL" -f 013_languages.sql
+psql "$DATABASE_URL" -f 014_indexes.sql
+```
+
+3. Запустите backend‑API:
+
+```bash
+cd backend-go/cmd/api
+go run .
+```
+
+API будет доступен по адресу `http://localhost:8080` (порт настраивается через `PORT`).
+
+### Frontend
 
 ```bash
 npm install
-```
-
-### Запуск в режиме разработки
-
-```bash
 npm run dev
 ```
 
 Приложение будет доступно по адресу `http://localhost:5173`
 
-### Сборка для продакшена
+### Сборка фронтенда для продакшена
 
 ```bash
 npm run build
