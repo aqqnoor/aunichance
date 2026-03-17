@@ -104,5 +104,13 @@ func NewRouter(d Deps) *echo.Echo {
 	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
 	e.GET("/universities", d.UniversitiesHandler.List) // ← добавить эту строку
 
+	// в router.go
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]any{
+			"status":  "ok",
+			"service": "backend",
+		})
+	})
+
 	return e
 }

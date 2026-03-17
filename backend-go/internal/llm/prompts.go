@@ -1,5 +1,4 @@
 package llm
-package llm
 
 const ParseProgramPrompt = `Ты — парсер образовательных программ.
 Извлеки из HTML-кода страницы информацию о программе обучения.
