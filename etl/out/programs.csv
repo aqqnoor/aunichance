@@ -1,0 +1,101 @@
+id,university_id,name,degree,ielts_required,gpa_required
+1,us_harvard,Computer Science,Bachelor,7.0,3.8
+2,us_harvard,Business,Bachelor,7.0,3.7
+3,us_stanford,Computer Science,Bachelor,7.0,3.9
+4,us_stanford,Business,Bachelor,7.0,3.8
+5,us_mit,Computer Science,Bachelor,7.5,3.9
+6,us_mit,Business,Bachelor,7.0,3.8
+7,us_berkeley,Computer Science,Bachelor,7.0,3.8
+8,us_berkeley,Business,Bachelor,7.0,3.7
+9,us_ucla,Computer Science,Bachelor,6.5,3.6
+10,us_ucla,Business,Bachelor,6.5,3.5
+11,us_nyu,Computer Science,Bachelor,6.5,3.5
+12,us_nyu,Business,Bachelor,6.5,3.4
+13,us_columbia,Computer Science,Bachelor,7.0,3.8
+14,us_columbia,Business,Bachelor,7.0,3.7
+15,us_yale,Computer Science,Bachelor,7.0,3.8
+16,us_yale,Business,Bachelor,7.0,3.7
+17,us_princeton,Computer Science,Bachelor,7.0,3.9
+18,us_princeton,Business,Bachelor,7.0,3.8
+19,us_duke,Computer Science,Bachelor,6.5,3.6
+20,us_duke,Business,Bachelor,6.5,3.5
+21,de_tum,Computer Science,Bachelor,6.5,3.5
+22,de_tum,Business,Bachelor,6.5,3.4
+23,de_rwth,Computer Science,Bachelor,6.5,3.4
+24,de_rwth,Business,Bachelor,6.5,3.3
+25,de_heidelberg,Computer Science,Bachelor,6.5,3.5
+26,de_heidelberg,Business,Bachelor,6.5,3.4
+27,de_lmu,Computer Science,Bachelor,6.5,3.5
+28,de_lmu,Business,Bachelor,6.5,3.4
+29,de_freiburg,Computer Science,Bachelor,6.0,3.3
+30,de_freiburg,Business,Bachelor,6.0,3.2
+31,uk_oxford,Computer Science,Bachelor,7.5,3.9
+32,uk_oxford,Business,Bachelor,7.0,3.8
+33,uk_cambridge,Computer Science,Bachelor,7.5,3.9
+34,uk_cambridge,Business,Bachelor,7.0,3.8
+35,uk_ucl,Computer Science,Bachelor,7.0,3.7
+36,uk_ucl,Business,Bachelor,7.0,3.6
+37,uk_imperial,Computer Science,Bachelor,7.0,3.8
+38,uk_imperial,Business,Bachelor,7.0,3.7
+39,uk_kcl,Computer Science,Bachelor,6.5,3.5
+40,uk_kcl,Business,Bachelor,6.5,3.4
+41,fr_sorbonne,Computer Science,Bachelor,6.0,3.3
+42,fr_sorbonne,Business,Bachelor,6.0,3.2
+43,fr_psl,Computer Science,Bachelor,6.5,3.5
+44,fr_psl,Business,Bachelor,6.5,3.4
+45,nl_tudelft,Computer Science,Bachelor,6.5,3.6
+46,nl_tudelft,Business,Bachelor,6.5,3.5
+47,nl_eindhoven,Computer Science,Bachelor,6.5,3.4
+48,nl_eindhoven,Business,Bachelor,6.5,3.3
+49,ca_toronto,Computer Science,Bachelor,6.5,3.6
+50,ca_toronto,Business,Bachelor,6.5,3.5
+51,ca_ubc,Computer Science,Bachelor,6.5,3.5
+52,ca_ubc,Business,Bachelor,6.5,3.4
+53,au_unimelb,Computer Science,Bachelor,6.5,3.5
+54,au_unimelb,Business,Bachelor,6.5,3.4
+55,au_anu,Computer Science,Bachelor,6.5,3.5
+56,au_anu,Business,Bachelor,6.5,3.4
+57,us_georgia_tech,Computer Science,Bachelor,6.5,3.6
+58,us_georgia_tech,Business,Bachelor,6.5,3.5
+59,us_ut_austin,Computer Science,Bachelor,6.5,3.6
+60,us_ut_austin,Business,Bachelor,6.5,3.5
+61,us_uiuc,Computer Science,Bachelor,6.5,3.6
+62,us_uiuc,Business,Bachelor,6.5,3.5
+63,de_kit,Computer Science,Bachelor,6.5,3.4
+64,de_kit,Business,Bachelor,6.5,3.3
+65,de_hamburg,Computer Science,Bachelor,6.0,3.2
+66,de_hamburg,Business,Bachelor,6.0,3.1
+67,uk_manchester,Computer Science,Bachelor,6.5,3.5
+68,uk_manchester,Business,Bachelor,6.5,3.4
+69,uk_bristol,Computer Science,Bachelor,6.5,3.5
+70,uk_bristol,Business,Bachelor,6.5,3.4
+71,fr_lyon,Computer Science,Bachelor,6.0,3.2
+72,fr_lyon,Business,Bachelor,6.0,3.1
+73,nl_groningen,Computer Science,Bachelor,6.5,3.4
+74,nl_groningen,Business,Bachelor,6.5,3.3
+75,ca_mcgill,Computer Science,Bachelor,6.5,3.6
+76,ca_mcgill,Business,Bachelor,6.5,3.5
+77,au_unsw,Computer Science,Bachelor,6.5,3.5
+78,au_unsw,Business,Bachelor,6.5,3.4
+79,us_purdue,Computer Science,Bachelor,6.5,3.5
+80,us_purdue,Business,Bachelor,6.5,3.4
+81,us_washington,Computer Science,Bachelor,6.5,3.7
+82,us_washington,Business,Bachelor,6.5,3.6
+83,de_bonn,Computer Science,Bachelor,6.0,3.3
+84,de_bonn,Business,Bachelor,6.0,3.2
+85,uk_edinburgh,Computer Science,Bachelor,6.5,3.6
+86,uk_edinburgh,Business,Bachelor,6.5,3.5
+87,fr_paris_saclay,Computer Science,Bachelor,6.5,3.5
+88,fr_paris_saclay,Business,Bachelor,6.5,3.4
+89,nl_leiden,Computer Science,Bachelor,6.5,3.4
+90,nl_leiden,Business,Bachelor,6.5,3.3
+91,ca_waterloo,Computer Science,Bachelor,6.5,3.7
+92,ca_waterloo,Business,Bachelor,6.5,3.6
+93,au_sydney,Computer Science,Bachelor,6.5,3.5
+94,au_sydney,Business,Bachelor,6.5,3.4
+95,us_usc,Computer Science,Bachelor,6.5,3.7
+96,us_usc,Business,Bachelor,6.5,3.6
+97,us_boston,Computer Science,Bachelor,6.5,3.5
+98,us_boston,Business,Bachelor,6.5,3.4
+99,de_stuttgart,Computer Science,Bachelor,6.5,3.4
+100,de_stuttgart,Business,Bachelor,6.5,3.3

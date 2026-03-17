@@ -108,3 +108,10 @@ export interface Program {
   qs_rank: number;
   the_rank: number;
 }
+
+export type ChanceResponse = {
+  score: number;
+  category: "reach" | "target" | "safety";
+  reasons: string[];
+  recommendations: string[];
+};
