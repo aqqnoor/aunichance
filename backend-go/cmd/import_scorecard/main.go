@@ -118,7 +118,12 @@ func main() {
 	}
 
 	// Подключаемся к БД
-	connStr := "postgresql://unichance:unichance@localhost:5432/unichance?sslmode=disable"
+	connStr := os.Getenv("DATABASE_URL")
+
+	if connStr == "" {
+		connStr = "postgresql://unichance:unichance@db:5432/unichance?sslmode=disable"
+	}
+
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)

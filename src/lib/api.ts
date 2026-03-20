@@ -1,10 +1,11 @@
-export const API_BASE_URL = 'http://localhost:8080'
-function getToken() {
+export const API_BASE_URL = "http://localhost:8080";
+
+// Vite env читается только с префиксом VITE_
+const API_URL = import.meta.env.VITE_API_URL || API_BASE_URL;
+
+function getToken(): string | null {
   return localStorage.getItem("token");
 }
-
-// Vite env тек VITE_ префикспен оқылады
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export async function apiGet<T>(path: string): Promise<T> {
   const token = getToken();
@@ -15,12 +16,15 @@ export async function apiGet<T>(path: string): Promise<T> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
+    throw new Error(
+      `API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`
+    );
   }
+
   return res.json();
 }
 
-export async function apiPost<T>(path: string, body: any): Promise<T> {
+export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const token = getToken();
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -34,8 +38,11 @@ export async function apiPost<T>(path: string, body: any): Promise<T> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
+    throw new Error(
+      `API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`
+    );
   }
+
   return res.json();
 }
 
@@ -49,22 +56,9 @@ export async function apiDelete<T>(path: string): Promise<T> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`);
-  }
-  return res.json();
-}
-
-export async function apiPost<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    throw new Error(
+      `API ${res.status} ${res.statusText} :: ${API_URL}${path} :: ${text}`
+    );
   }
 
   return res.json();

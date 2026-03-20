@@ -1,12 +1,29 @@
--- 014_indexes.sql
--- Add pragmatic indexes for real search queries (MVP).
+-- Safe indexes only for existing tables
 
--- 1) Composite index for common program filters:
---    (degree_level, field) — adjusted for current Go schema.
-CREATE INDEX IF NOT EXISTS idx_programs_degree_field_v2
-  ON programs(degree_level, field);
+-- Universities
+CREATE INDEX IF NOT EXISTS idx_universities_country_code
+ON universities(country_code);
 
--- 2) Composite index for deadlines by program and date.
-CREATE INDEX IF NOT EXISTS idx_deadlines_program_date_v2
-  ON deadlines(program_id, deadline_date);
+CREATE INDEX IF NOT EXISTS idx_universities_city
+ON universities(city);
 
+-- Programs
+CREATE INDEX IF NOT EXISTS idx_programs_university_id
+ON programs(university_id);
+
+CREATE INDEX IF NOT EXISTS idx_programs_degree_level
+ON programs(degree_level);
+
+CREATE INDEX IF NOT EXISTS idx_programs_language
+ON programs(language);
+
+-- Profiles
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id
+ON profiles(user_id);
+
+-- Smart match
+CREATE INDEX IF NOT EXISTS idx_smart_match_results_user
+ON smart_match_results(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_smart_match_results_score
+ON smart_match_results(score);
