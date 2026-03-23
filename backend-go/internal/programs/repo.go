@@ -139,6 +139,14 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 		return nil, 0, err
 	}
 
+	programDescriptionExpr := r.programDescriptionExpr(ctx)
+
+	// itemsQuery
+	offset := (p.Page - 1) * p.Limit
+	args = append(args, p.Limit, offset)
+	limitPos := len(args) - 1
+	offsetPos := len(args)
+
 	// itemsQuery
 	offset := (p.Page - 1) * p.Limit
 	args = append(args, p.Limit, offset)
@@ -150,6 +158,20 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
       programs.id, programs.title, programs.degree_level::text, programs.field, programs.language,
       programs.tuition_amount, programs.tuition_currency::text,
       programs.has_scholarship, programs.scholarship_type, programs.scholarship_percent_min, programs.scholarship_percent_max,
+      ` + programDescriptionExpr + `,
+      ` + r.optionalProgramColumnExpr(ctx, "program_description_ru", "program_description_ru", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "title_ru", "title_ru", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "field_normalized", "field_normalized", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "study_language_normalized", "study_language_normalized", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "selectivity_tier", "selectivity_tier", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "career_paths_ru", "career_paths_ru", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "duration_months", "duration_months", "int") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "mode_of_study", "mode_of_study", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "attendance_type", "attendance_type", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "official_program_url", "official_program_url", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "career_paths", "career_paths", "text") + `,
+      ` + r.optionalProgramColumnExpr(ctx, "admission_notes", "admission_notes", "text") + `,
+      universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank,
       programs.program_description, programs.program_description_ru, programs.title_ru,
       programs.field_normalized, programs.study_language_normalized, programs.selectivity_tier, programs.career_paths_ru,
       programs.duration_months, programs.mode_of_study, programs.attendance_type,
@@ -186,4 +208,32 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 		items = append(items, it)
 	}
 	return items, total, rows.Err()
+}
+
+func (r Repo) optionalProgramColumnExpr(ctx context.Context, column, alias, castType string) string {
+	if r.hasColumn(ctx, "programs", column) {
+		return "programs." + column
+	}
+	return "NULL::" + castType + " AS " + alias
+}
+
+func (r Repo) programDescriptionExpr(ctx context.Context) string {
+	if r.hasColumn(ctx, "programs", "program_description") {
+		return "programs.program_description"
+	}
+	return "programs.description AS program_description"
+}
+
+func (r Repo) hasColumn(ctx context.Context, tableName, columnName string) bool {
+	var exists bool
+	err := r.DB.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema = 'public'
+			  AND table_name = $1
+			  AND column_name = $2
+		)
+	`, tableName, columnName).Scan(&exists)
+	return err == nil && exists
 }
