@@ -18,7 +18,9 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
 	err := r.DB.QueryRow(ctx, `
     SELECT
       id, name, country_code, city, website, qs_rank, the_rank, data_updated_at,
-      slug, country_name, region_or_state, official_website, short_description, full_description,
+      slug, country_name, region_or_state, official_website, short_description, short_description_ru,
+      full_description, description_ru, profile_completeness_score, cost_tier,
+      admission_competitiveness_tier, country_priority_group, is_featured,
       founded_year, university_type, campus_type, main_language, study_languages,
       total_students, international_students, international_students_percent, female_percent,
       popular_fields, research_strengths,
@@ -32,7 +34,9 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
     WHERE id = $1
   `, id).Scan(
 		&u.ID, &u.Name, &u.CountryCode, &u.City, &u.Website, &u.QSRank, &u.THERank, &u.DataUpdatedAt,
-		&u.Slug, &u.CountryName, &u.RegionOrState, &u.OfficialWebsite, &u.ShortDescription, &u.FullDescription,
+		&u.Slug, &u.CountryName, &u.RegionOrState, &u.OfficialWebsite, &u.ShortDescription, &u.ShortDescriptionRU,
+		&u.FullDescription, &u.DescriptionRU, &u.ProfileCompletenessScore, &u.CostTier,
+		&u.AdmissionCompetitivenessTier, &u.CountryPriorityGroup, &u.IsFeatured,
 		&u.FoundedYear, &u.UniversityType, &u.CampusType, &u.MainLanguage, &u.StudyLanguages,
 		&u.TotalStudents, &u.InternationalStudents, &u.InternationalStudentsPct, &u.FemalePercent,
 		&u.PopularFields, &u.ResearchStrengths,
@@ -127,7 +131,7 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]University, int64
 	rows, err := r.DB.Query(ctx, `
 		SELECT
 		  id, name, country_code, city, website, qs_rank, the_rank, data_updated_at,
-		  short_description, official_website
+		  short_description, short_description_ru, official_website
 		FROM universities 
 		ORDER BY name 
 		LIMIT $1 OFFSET $2
@@ -149,6 +153,7 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]University, int64
 			&u.THERank,
 			&u.DataUpdatedAt,
 			&u.ShortDescription,
+			&u.ShortDescriptionRU,
 			&u.OfficialWebsite,
 		)
 		if err != nil {

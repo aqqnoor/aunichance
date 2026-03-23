@@ -11,6 +11,7 @@ import University from "./pages/University";
 
 import Layout from './components/Layout';
 import Search from './pages/Search';
+import SmartSearch from './pages/SmartSearch';
 
 function App() {
   const [profile, setProfile] = useState<StudentProfile>({});
@@ -59,6 +60,7 @@ function App() {
         />
 
         <Route path="/search" element={<Search />} />
+        <Route path="/smart-search" element={<SmartSearch />} />
 
         <Route path="/universities/:id" element={<University />} />
 

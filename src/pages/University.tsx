@@ -38,7 +38,9 @@ type UniversityDTO = {
   the_rank?: number | null;
   data_updated_at?: string | null;
   short_description?: string | null;
+  short_description_ru?: string | null;
   full_description?: string | null;
+  description_ru?: string | null;
   founded_year?: number | null;
   university_type?: string | null;
   campus_type?: string | null;
@@ -161,8 +163,8 @@ export default function University() {
           {(data.city ? `${data.city}, ` : "")}{data.country_name || data.country_code}
           {data.region_or_state ? ` • ${data.region_or_state}` : ""}
         </p>
-        {data.short_description && (
-          <p className="text-gray-700 mt-3">{data.short_description}</p>
+        {(data.short_description_ru || data.short_description) && (
+          <p className="text-gray-700 mt-3">{data.short_description_ru || data.short_description}</p>
         )}
 
         <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-700">
@@ -192,7 +194,7 @@ export default function University() {
       {(data.full_description || data.admission_requirements_summary || data.campus_summary || data.career_outcomes_summary) && (
         <div className="card mb-6">
           <h2 className="text-xl font-semibold mb-3">University profile</h2>
-          {data.full_description && <p className="text-gray-700 whitespace-pre-line mb-4">{data.full_description}</p>}
+          {(data.description_ru || data.full_description) && <p className="text-gray-700 whitespace-pre-line mb-4">{data.description_ru || data.full_description}</p>}
           {data.admission_requirements_summary && (
             <p className="text-gray-700 mb-2"><span className="font-medium">Admissions:</span> {data.admission_requirements_summary}</p>
           )}
