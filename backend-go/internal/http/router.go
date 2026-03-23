@@ -22,6 +22,8 @@ type Deps struct {
 	UniversitiesHandler  universities.Handler
 	SmartMatchingHandler smartmatching.Handler
 	LLMHandler           interface{}
+	LLMHandler           interface{}
+	SmartMatchingHandler interface{}
 	JwtSecret            string
 }
 
@@ -97,6 +99,21 @@ func NewRouter(d Deps) *echo.Echo {
 
 	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
 	e.GET("/universities", d.UniversitiesHandler.List)
+	// smart matching (protected)
+	if d.SmartMatchingHandler != nil {
+		if h, ok := d.SmartMatchingHandler.(interface{ SaveProfile(echo.Context) error }); ok {
+			e.POST("/smart-matching/profile", h.SaveProfile, appMw.RequireAuth(d.JwtSecret))
+		}
+		if h, ok := d.SmartMatchingHandler.(interface{ Recommendations(echo.Context) error }); ok {
+			e.POST("/smart-matching/recommendations", h.Recommendations, appMw.RequireAuth(d.JwtSecret))
+		}
+		if h, ok := d.SmartMatchingHandler.(interface{ Chat(echo.Context) error }); ok {
+			e.POST("/smart-matching/chat", h.Chat, appMw.RequireAuth(d.JwtSecret))
+		}
+	}
+	// universities (public)
+	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
+	e.GET("/universities", d.UniversitiesHandler.List) // ← добавить эту строку
 
 	return e
 }
