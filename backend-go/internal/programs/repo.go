@@ -86,17 +86,9 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 	}
 	if len(p.Languages) > 0 {
 		args = append(args, p.Languages)
-		langArg := len(args)
-		langConds := []string{fmt.Sprintf("programs.language = ANY($%d)", langArg)}
-		if r.hasColumn(ctx, "programs", "language_code") {
-			langConds = append(langConds, fmt.Sprintf("programs.language_code::text = ANY($%d)", langArg))
-		}
-		if r.hasColumn(ctx, "programs", "study_language_normalized") {
-			langConds = append(langConds, fmt.Sprintf("programs.study_language_normalized = ANY($%d)", langArg))
-		}
-		where = append(where, "("+strings.Join(langConds, " OR ")+")")
+		where = append(where, fmt.Sprintf("(programs.language = ANY($%d) OR programs.language_code::text = ANY($%d) OR programs.study_language_normalized = ANY($%d))", len(args), len(args), len(args)))
 	}
-	if len(p.Regions) > 0 && r.hasColumn(ctx, "universities", "region_or_state") {
+	if len(p.Regions) > 0 {
 		args = append(args, p.Regions)
 		where = append(where, fmt.Sprintf("universities.region_or_state = ANY($%d)", len(args)))
 	}
