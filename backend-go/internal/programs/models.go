@@ -15,6 +15,12 @@ type ProgramCard struct {
 	ScholarshipPercentMin *int    `json:"scholarship_percent_min"`
 	ScholarshipPercentMax *int    `json:"scholarship_percent_max"`
 	ProgramDescription    *string `json:"program_description,omitempty"`
+	ProgramDescriptionRU  *string `json:"program_description_ru,omitempty"`
+	TitleRU               *string `json:"title_ru,omitempty"`
+	FieldNormalized       *string `json:"field_normalized,omitempty"`
+	StudyLanguageNorm     *string `json:"study_language_normalized,omitempty"`
+	SelectivityTier       *string `json:"selectivity_tier,omitempty"`
+	CareerPathsRU         *string `json:"career_paths_ru,omitempty"`
 	DurationMonths        *int    `json:"duration_months,omitempty"`
 	ModeOfStudy           *string `json:"mode_of_study,omitempty"`
 	AttendanceType        *string `json:"attendance_type,omitempty"`

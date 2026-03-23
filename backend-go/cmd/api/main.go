@@ -16,8 +16,9 @@ import (
 	// "unichance-backend-go/internal/llm"
 	"unichance-backend-go/internal/profile"
 	"unichance-backend-go/internal/programs"
-	"unichance-backend-go/internal/universities"
 	"unichance-backend-go/internal/scoring"
+	"unichance-backend-go/internal/smartmatching"
+	"unichance-backend-go/internal/universities"
 )
 
 func main() {
@@ -58,6 +59,13 @@ func main() {
 	uniRepo := universities.Repo{DB: pool}
 	uniH := universities.Handler{Repo: uniRepo}
 
+	smartRepo := smartmatching.Repo{DB: pool}
+	smartSvc := smartmatching.Service{}
+	if cfg.OpenAIAPIKey != "" {
+		smartSvc.AI = &smartmatching.OpenAIClient{APIKey: cfg.OpenAIAPIKey, Model: cfg.OpenAIModel}
+	}
+	smartH := smartmatching.Handler{Repo: smartRepo, ProgRepo: progRepo, Service: smartSvc}
+
 	// // llm handler (proxy)
 	// llmURL := os.Getenv("LLM_SERVICE_URL")
 	// llmH := llm.Handler{DB: pool, ProfileRepo: profRepo, LLMURL: llmURL}
@@ -67,8 +75,9 @@ func main() {
 		ProgramsHandler: progH,
 		ProfileHandler:  profH,
 		// LLMHandler:          llmH,
-		JwtSecret:           cfg.JwtSecret,
-		UniversitiesHandler: uniH,
+		JwtSecret:            cfg.JwtSecret,
+		UniversitiesHandler:  uniH,
+		SmartMatchingHandler: smartH,
 	})
 
 	log.Println("api listening on :" + cfg.Port)
