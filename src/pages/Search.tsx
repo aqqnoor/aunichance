@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { API_BASE_URL, apiGet, apiPost } from "../lib/api";
+import { apiGet, apiPost } from "../lib/api";
 import { Link } from "react-router-dom";
 import { ScoreResult } from "../types";
 
@@ -197,17 +197,17 @@ export default function Search() {
         countries = "DE,US,GB,FR";
       }
 
-      if (countries) params.set("country", countries);
+      if (countries) params.set("countries", countries);
 
       const lvl = normalizeLevel(filters.degree_level);
-      if (lvl) params.set("degree", lvl);
+      if (lvl) params.set("levels", lvl);
 
       if (filters.city && filters.city.trim() !== "") {
         params.set("city", filters.city.trim());
       }
 
       if (filters.field_of_study && filters.field_of_study.trim() !== "") {
-        params.set("field", filters.field_of_study.trim());
+        params.set("fields", filters.field_of_study.trim());
       }
 
       if (filters.language && filters.language !== "Все языки") {
@@ -223,38 +223,18 @@ export default function Search() {
       params.set("page", "1");
       params.set("limit", "50");
 
-      const url = `/universities?${params.toString()}`;
+      const url = `/programs?${params.toString()}`;
       console.log("Request:", url);
 
-      const response = await apiGet<{ data: any[]; total: number }>(url);
-      console.log("API data:", response.data?.length, response);
-      const programs = response.data || [];
-      // Map backend program objects to ProgramDTO
-      const formattedPrograms = programs.map((p: any) => ({
-        id: p.id,
-        university_id: p.id,  // ← УНИВЕРСИТЕТ! Его ID — это и есть university_id
-        title: p.name || p.title || "Без названия",  // ← Берём name из университета
-        university_name: p.name || p.university_name || "Без названия",
-        country_code: p.country_code || "US",
-        city: p.city || "",
-        qs_rank: p.qs_rank,
-        the_rank: p.the_rank,
-        degree_level: filters.degree_level || "master", // из фильтра
-        field: filters.field_of_study || "Computer Science",
-        language: filters.language || "EN",
-        has_scholarship: false,
-        tuition_amount: undefined,
-        tuition_currency: undefined,
-        scholarship_type: null,
-        scholarship_percent_min: null,
-        scholarship_percent_max: null
-      }));
+      const response = await apiGet<{ items: ProgramDTO[]; total: number }>(url);
+      console.log("API data:", response.items?.length, response);
+      const formattedPrograms = response.items || [];
 
       setResults(sortPrograms(formattedPrograms, sortField, sortOrder));
       console.log("🔥 Первый элемент formattedPrograms:", formattedPrograms[0]);
 
       // Load scores for all programs (if user is authenticated)
-      loadScoresForPrograms(response.data || []);
+      loadScoresForPrograms(response.items || []);
     } catch (error) {
       console.error("Search error:", error);
       setErrorMsg(error instanceof Error ? error.message : String(error));

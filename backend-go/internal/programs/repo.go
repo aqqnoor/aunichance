@@ -126,6 +126,8 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
       programs.id, programs.title, programs.degree_level::text, programs.field, programs.language,
       programs.tuition_amount, programs.tuition_currency::text,
       programs.has_scholarship, programs.scholarship_type, programs.scholarship_percent_min, programs.scholarship_percent_max,
+      programs.program_description, programs.duration_months, programs.mode_of_study, programs.attendance_type,
+      programs.official_program_url, programs.career_paths, programs.admission_notes,
       universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank, 
       programs.university_id
     FROM programs
@@ -144,6 +146,8 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
       &it.ID, &it.Title, &it.DegreeLevel, &it.Field, &it.Language,
       &it.TuitionAmount, &it.TuitionCurrency,
       &it.HasScholarship, &it.ScholarshipType, &it.ScholarshipPercentMin, &it.ScholarshipPercentMax,
+      &it.ProgramDescription, &it.DurationMonths, &it.ModeOfStudy, &it.AttendanceType,
+      &it.OfficialProgramURL, &it.CareerPaths, &it.AdmissionNotes,
       &it.UniversityName, &it.CountryCode, &it.City, &it.QSRank, &it.THERank, &it.UniversityID,
     )
     if err != nil { return nil, 0, err }

@@ -29,11 +29,31 @@ type UniversityDTO = {
   id: string;
   name: string;
   country_code: string;
+  country_name?: string | null;
   city?: string | null;
+  region_or_state?: string | null;
   website?: string | null;
+  official_website?: string | null;
   qs_rank?: number | null;
   the_rank?: number | null;
   data_updated_at?: string | null;
+  short_description?: string | null;
+  full_description?: string | null;
+  founded_year?: number | null;
+  university_type?: string | null;
+  campus_type?: string | null;
+  total_students?: number | null;
+  international_students?: number | null;
+  international_students_percent?: number | null;
+  female_percent?: number | null;
+  tuition_min?: number | null;
+  tuition_max?: number | null;
+  tuition_currency?: string | null;
+  scholarship_info?: string | null;
+  acceptance_rate_estimate?: number | null;
+  admission_requirements_summary?: string | null;
+  campus_summary?: string | null;
+  career_outcomes_summary?: string | null;
   links: UniversityLink[];
   programs: ProgramLite[];
 };
@@ -138,13 +158,16 @@ export default function University() {
       <div className="card mb-6">
         <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
         <p className="text-gray-600 mt-2">
-          {(data.city ? `${data.city}, ` : "")}
-          {data.country_code}
+          {(data.city ? `${data.city}, ` : "")}{data.country_name || data.country_code}
+          {data.region_or_state ? ` • ${data.region_or_state}` : ""}
         </p>
+        {data.short_description && (
+          <p className="text-gray-700 mt-3">{data.short_description}</p>
+        )}
 
         <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-700">
-          {data.website && (
-            <a className="text-primary-600 hover:underline" href={data.website} target="_blank" rel="noreferrer">
+          {(data.official_website || data.website) && (
+            <a className="text-primary-600 hover:underline" href={data.official_website || data.website || '#'} target="_blank" rel="noreferrer">
               Official site
             </a>
           )}
@@ -154,6 +177,48 @@ export default function University() {
           {typeof data.the_rank === "number" && data.the_rank > 0 && (
             <span>THE: #{data.the_rank}</span>
           )}
+          {typeof data.founded_year === "number" && data.founded_year > 0 && (
+            <span>Founded: {data.founded_year}</span>
+          )}
+          {data.university_type && (
+            <span>Type: {data.university_type}</span>
+          )}
+          {data.campus_type && (
+            <span>Campus: {data.campus_type}</span>
+          )}
+        </div>
+      </div>
+
+      {(data.full_description || data.admission_requirements_summary || data.campus_summary || data.career_outcomes_summary) && (
+        <div className="card mb-6">
+          <h2 className="text-xl font-semibold mb-3">University profile</h2>
+          {data.full_description && <p className="text-gray-700 whitespace-pre-line mb-4">{data.full_description}</p>}
+          {data.admission_requirements_summary && (
+            <p className="text-gray-700 mb-2"><span className="font-medium">Admissions:</span> {data.admission_requirements_summary}</p>
+          )}
+          {data.campus_summary && (
+            <p className="text-gray-700 mb-2"><span className="font-medium">Campus:</span> {data.campus_summary}</p>
+          )}
+          {data.career_outcomes_summary && (
+            <p className="text-gray-700"><span className="font-medium">Career outcomes:</span> {data.career_outcomes_summary}</p>
+          )}
+        </div>
+      )}
+
+      <div className="card mb-6">
+        <h2 className="text-xl font-semibold mb-4">Key facts</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700">
+          {typeof data.total_students === "number" && <div>Total students: {data.total_students.toLocaleString()}</div>}
+          {typeof data.international_students === "number" && <div>International students: {data.international_students.toLocaleString()}</div>}
+          {typeof data.international_students_percent === "number" && <div>International share: {data.international_students_percent}%</div>}
+          {typeof data.female_percent === "number" && <div>Female share: {data.female_percent}%</div>}
+          {typeof data.acceptance_rate_estimate === "number" && <div>Acceptance estimate: {data.acceptance_rate_estimate}%</div>}
+          {(typeof data.tuition_min === "number" || typeof data.tuition_max === "number") && (
+            <div>
+              Tuition range: {data.tuition_min?.toLocaleString() || "N/A"} - {data.tuition_max?.toLocaleString() || "N/A"} {data.tuition_currency || ""}
+            </div>
+          )}
+          {data.scholarship_info && <div className="sm:col-span-2 lg:col-span-3">Scholarships: {data.scholarship_info}</div>}
         </div>
       </div>
 
