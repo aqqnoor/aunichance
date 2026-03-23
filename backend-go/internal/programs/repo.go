@@ -147,6 +147,12 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 	limitPos := len(args) - 1
 	offsetPos := len(args)
 
+	// itemsQuery
+	offset := (p.Page - 1) * p.Limit
+	args = append(args, p.Limit, offset)
+	limitPos := len(args) - 1
+	offsetPos := len(args)
+
 	itemsSQL := `
     SELECT
       programs.id, programs.title, programs.degree_level::text, programs.field, programs.language,
@@ -166,6 +172,11 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
       ` + r.optionalProgramColumnExpr(ctx, "career_paths", "career_paths", "text") + `,
       ` + r.optionalProgramColumnExpr(ctx, "admission_notes", "admission_notes", "text") + `,
       universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank,
+      programs.program_description, programs.program_description_ru, programs.title_ru,
+      programs.field_normalized, programs.study_language_normalized, programs.selectivity_tier, programs.career_paths_ru,
+      programs.duration_months, programs.mode_of_study, programs.attendance_type,
+      programs.official_program_url, programs.career_paths, programs.admission_notes,
+      universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank, 
       programs.university_id
     FROM programs
     JOIN universities ON universities.id = programs.university_id
