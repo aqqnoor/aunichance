@@ -86,10 +86,20 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 	}
 	if len(p.Languages) > 0 {
 		args = append(args, p.Languages)
-		where = append(where, fmt.Sprintf("programs.language = ANY($%d)", len(args)))
+		langArg := len(args)
+		langConds := []string{fmt.Sprintf("programs.language = ANY($%d)", langArg)}
+		if r.hasColumn(ctx, "programs", "language_code") {
+			langConds = append(langConds, fmt.Sprintf("programs.language_code::text = ANY($%d)", langArg))
+		}
+		if r.hasColumn(ctx, "programs", "study_language_normalized") {
+			langConds = append(langConds, fmt.Sprintf("programs.study_language_normalized = ANY($%d)", langArg))
+		}
+		where = append(where, "("+strings.Join(langConds, " OR ")+")")
 	}
-	// region filter intentionally not applied here to keep compatibility
-	// with deployments where region_or_state has not been migrated yet.
+	if len(p.Regions) > 0 && r.hasColumn(ctx, "universities", "region_or_state") {
+		args = append(args, p.Regions)
+		where = append(where, fmt.Sprintf("universities.region_or_state = ANY($%d)", len(args)))
+	}
 	if p.Currency != "" {
 		add("programs.tuition_currency::text = $%d", p.Currency)
 	}
@@ -137,6 +147,17 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 		return nil, 0, err
 	}
 
+	sel := func(column, alias, castType string) string {
+		if r.hasColumn(ctx, "programs", column) {
+			return "programs." + column
+		}
+		return "NULL::" + castType + " AS " + alias
+	}
+	programDescriptionExpr := "programs.description AS program_description"
+	if r.hasColumn(ctx, "programs", "program_description") {
+		programDescriptionExpr = "programs.program_description"
+	}
+
 	// itemsQuery
 	offset := (p.Page - 1) * p.Limit
 	args = append(args, p.Limit, offset)
@@ -148,20 +169,20 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
       programs.id, programs.title, programs.degree_level::text, programs.field, programs.language,
       programs.tuition_amount, programs.tuition_currency::text,
       programs.has_scholarship, programs.scholarship_type, programs.scholarship_percent_min, programs.scholarship_percent_max,
-      programs.description AS program_description,
-      NULL::text AS program_description_ru,
-      NULL::text AS title_ru,
-      NULL::text AS field_normalized,
-      NULL::text AS study_language_normalized,
-      NULL::text AS selectivity_tier,
-      NULL::text AS career_paths_ru,
-      NULL::int AS duration_months,
-      NULL::text AS mode_of_study,
-      NULL::text AS attendance_type,
-      NULL::text AS official_program_url,
-      NULL::text AS career_paths,
-      NULL::text AS admission_notes,
-      universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank, 
+      ` + programDescriptionExpr + `,
+      ` + sel("program_description_ru", "program_description_ru", "text") + `,
+      ` + sel("title_ru", "title_ru", "text") + `,
+      ` + sel("field_normalized", "field_normalized", "text") + `,
+      ` + sel("study_language_normalized", "study_language_normalized", "text") + `,
+      ` + sel("selectivity_tier", "selectivity_tier", "text") + `,
+      ` + sel("career_paths_ru", "career_paths_ru", "text") + `,
+      ` + sel("duration_months", "duration_months", "int") + `,
+      ` + sel("mode_of_study", "mode_of_study", "text") + `,
+      ` + sel("attendance_type", "attendance_type", "text") + `,
+      ` + sel("official_program_url", "official_program_url", "text") + `,
+      ` + sel("career_paths", "career_paths", "text") + `,
+      ` + sel("admission_notes", "admission_notes", "text") + `,
+      universities.name, universities.country_code, universities.city, universities.qs_rank, universities.the_rank,
       programs.university_id
     FROM programs
     JOIN universities ON universities.id = programs.university_id
@@ -193,4 +214,18 @@ func (r Repo) List(ctx context.Context, p ListParams) (items []ProgramCard, tota
 		items = append(items, it)
 	}
 	return items, total, rows.Err()
+}
+
+func (r Repo) hasColumn(ctx context.Context, tableName, columnName string) bool {
+	var exists bool
+	err := r.DB.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema = 'public'
+			  AND table_name = $1
+			  AND column_name = $2
+		)
+	`, tableName, columnName).Scan(&exists)
+	return err == nil && exists
 }
