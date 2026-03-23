@@ -17,12 +17,13 @@ import (
 )
 
 type Deps struct {
-	AuthHandler         auth.Handler
-	ProgramsHandler     programs.Handler
-	ProfileHandler      profile.Handler
-	UniversitiesHandler universities.Handler
-	LLMHandler          interface{}
-	JwtSecret           string
+	AuthHandler          auth.Handler
+	ProgramsHandler      programs.Handler
+	ProfileHandler       profile.Handler
+	UniversitiesHandler  universities.Handler
+	LLMHandler           interface{}
+	SmartMatchingHandler interface{}
+	JwtSecret            string
 }
 
 func NewRouter(d Deps) *echo.Echo {
@@ -103,17 +104,21 @@ func NewRouter(d Deps) *echo.Echo {
 		}
 	}
 
+	// smart matching (protected)
+	if d.SmartMatchingHandler != nil {
+		if h, ok := d.SmartMatchingHandler.(interface{ SaveProfile(echo.Context) error }); ok {
+			e.POST("/smart-matching/profile", h.SaveProfile, appMw.RequireAuth(d.JwtSecret))
+		}
+		if h, ok := d.SmartMatchingHandler.(interface{ Recommendations(echo.Context) error }); ok {
+			e.POST("/smart-matching/recommendations", h.Recommendations, appMw.RequireAuth(d.JwtSecret))
+		}
+		if h, ok := d.SmartMatchingHandler.(interface{ Chat(echo.Context) error }); ok {
+			e.POST("/smart-matching/chat", h.Chat, appMw.RequireAuth(d.JwtSecret))
+		}
+	}
 	// universities (public)
 	e.GET("/universities/:id", d.UniversitiesHandler.GetByID)
 	e.GET("/universities", d.UniversitiesHandler.List) // ← добавить эту строку
-
-	// в router.go
-	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(200, map[string]any{
-			"status":  "ok",
-			"service": "backend",
-		})
-	})
 
 	return e
 }
