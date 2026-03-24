@@ -50,7 +50,6 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
 		return nil, err
 	}
 
-	// links
 	rows, err := r.DB.Query(ctx, `
     SELECT
       ul.id, ul.link_type, ul.url, ul.title, ul.is_official, ul.priority,
@@ -78,8 +77,10 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
 		}
 		u.Links = append(u.Links, l)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	// programs (lite)
 	prow, err := r.DB.Query(ctx, `
     SELECT
       p.id, p.title, p.degree_level::text, p.field, p.language,
@@ -109,6 +110,9 @@ func (r Repo) GetByID(ctx context.Context, id string) (*University, error) {
 		}
 		u.Programs = append(u.Programs, p)
 	}
+	if err := prow.Err(); err != nil {
+		return nil, err
+	}
 
 	return &u, nil
 }
@@ -117,13 +121,11 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]University, int64
 	var total int64
 	var universities []University
 
-	// Считаем общее количество
 	err := r.DB.QueryRow(ctx, "SELECT COUNT(*) FROM universities").Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Получаем университеты с пагинацией — ТОЛЬКО те поля, которые РЕАЛЬНО есть в таблице
 	rows, err := r.DB.Query(ctx, `
 		SELECT
 		  id, name, country_code, city, website, qs_rank, the_rank, data_updated_at,
@@ -155,6 +157,10 @@ func (r *Repo) List(ctx context.Context, limit, offset int) ([]University, int64
 			return nil, 0, err
 		}
 		universities = append(universities, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
 	}
 
 	return universities, total, nil

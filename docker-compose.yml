@@ -38,6 +38,10 @@ services:
       psql "postgresql://unichance@db:5432/unichance?sslmode=disable" -v ON_ERROR_STOP=1 -f /migrations/012_degree_level_enum.sql;
       psql "postgresql://unichance@db:5432/unichance?sslmode=disable" -v ON_ERROR_STOP=1 -f /migrations/013_languages.sql;
       psql "postgresql://unichance@db:5432/unichance?sslmode=disable" -v ON_ERROR_STOP=1 -f /migrations/014_indexes.sql;
+      psql "postgresql://unichance@db:5432/unichance?sslmode=disable" -v ON_ERROR_STOP=1 -f /migrations/015_profile_enrichment.sql;
+      psql "postgresql://unichance@db:5432/unichance?sslmode=disable" -v ON_ERROR_STOP=1 -f /migrations/016_university_program_enrichment.sql;
+
+
       # Добавить сюда 015_llm_service_support.sql (см. ниже)
       echo "✅ migrations applied";
       '
