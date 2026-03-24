@@ -23,9 +23,28 @@ CREATE TABLE IF NOT EXISTS universities (
 );
 
 -- programs
-CREATE TYPE degree_level AS ENUM ('bachelor','master');
-CREATE TYPE tuition_currency AS ENUM ('USD','EUR','KZT');
-
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'degree_level'
+    ) THEN
+        CREATE TYPE degree_level AS ENUM ('bachelor', 'master', 'phd');
+    END IF;
+END
+$$;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'tuition_currency'
+    ) THEN
+        CREATE TYPE tuition_currency AS ENUM ('USD', 'EUR', 'GBP', 'KZT');
+    END IF;
+END
+$$;
 CREATE TABLE IF NOT EXISTS programs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   university_id UUID NOT NULL REFERENCES universities(id) ON DELETE CASCADE,

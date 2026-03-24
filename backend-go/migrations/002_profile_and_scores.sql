@@ -20,8 +20,18 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_profiles_user ON profiles(user_id);
-
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'profiles_user_unique'
+    ) THEN
+        ALTER TABLE profiles
+        ADD CONSTRAINT profiles_user_unique UNIQUE (user_id);
+    END IF;
+END
+$$;
 -- scores history
 CREATE TABLE IF NOT EXISTS scores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -42,6 +52,4 @@ DROP TRIGGER IF EXISTS trg_profiles_updated_at ON profiles;
 CREATE TRIGGER trg_profiles_updated_at
 BEFORE UPDATE ON profiles
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
--- unique constraint: one profile per user
-ALTER TABLE profiles
-  ADD CONSTRAINT profiles_user_unique UNIQUE (user_id);
+
