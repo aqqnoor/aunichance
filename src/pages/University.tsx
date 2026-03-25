@@ -162,13 +162,20 @@ export default function University() {
           {data.region_or_state ? ` • ${data.region_or_state}` : ""}
         </p>
         {data.short_description && (
-          <p className="text-gray-700 mt-3">{data.short_description}</p>
+          <p className="text-lg text-gray-800 mt-3 font-medium leading-relaxed">
+            {data.short_description}
+          </p>
         )}
 
         <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-700">
           {(data.official_website || data.website) && (
-            <a className="text-primary-600 hover:underline" href={data.official_website || data.website || '#'} target="_blank" rel="noreferrer">
-              Official site
+            <a
+              className="inline-block px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition"
+              href={data.official_website || data.website || '#'}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Visit official website
             </a>
           )}
           {typeof data.qs_rank === "number" && data.qs_rank > 0 && (
@@ -191,34 +198,95 @@ export default function University() {
 
       {(data.full_description || data.admission_requirements_summary || data.campus_summary || data.career_outcomes_summary) && (
         <div className="card mb-6">
-          <h2 className="text-xl font-semibold mb-3">University profile</h2>
-          {data.full_description && <p className="text-gray-700 whitespace-pre-line mb-4">{data.full_description}</p>}
+          <h2 className="text-xl font-semibold mb-4">About university</h2>
+          {data.full_description && (
+            <>
+              <p className="text-gray-700 whitespace-pre-line mb-4">
+                {data.full_description}
+              </p>
+            </>
+          )}
+
           {data.admission_requirements_summary && (
-            <p className="text-gray-700 mb-2"><span className="font-medium">Admissions:</span> {data.admission_requirements_summary}</p>
+            <>
+              <h3 className="font-semibold text-gray-900 mt-4 mb-1">Admissions</h3>
+              <p className="text-gray-700 mb-3">
+                {data.admission_requirements_summary}
+              </p>
+            </>
           )}
+
           {data.campus_summary && (
-            <p className="text-gray-700 mb-2"><span className="font-medium">Campus:</span> {data.campus_summary}</p>
+            <>
+              <h3 className="font-semibold text-gray-900 mt-4 mb-1">Campus</h3>
+              <p className="text-gray-700 mb-3">
+                {data.campus_summary}
+              </p>
+            </>
           )}
+
           {data.career_outcomes_summary && (
-            <p className="text-gray-700"><span className="font-medium">Career outcomes:</span> {data.career_outcomes_summary}</p>
+            <>
+              <h3 className="font-semibold text-gray-900 mt-4 mb-1">Career outcomes</h3>
+              <p className="text-gray-700">
+                {data.career_outcomes_summary}
+              </p>
+            </>
           )}
         </div>
       )}
 
       <div className="card mb-6">
         <h2 className="text-xl font-semibold mb-4">Key facts</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700">
-          {typeof data.total_students === "number" && <div>Total students: {data.total_students.toLocaleString()}</div>}
-          {typeof data.international_students === "number" && <div>International students: {data.international_students.toLocaleString()}</div>}
-          {typeof data.international_students_percent === "number" && <div>International share: {data.international_students_percent}%</div>}
-          {typeof data.female_percent === "number" && <div>Female share: {data.female_percent}%</div>}
-          {typeof data.acceptance_rate_estimate === "number" && <div>Acceptance estimate: {data.acceptance_rate_estimate}%</div>}
-          {(typeof data.tuition_min === "number" || typeof data.tuition_max === "number") && (
-            <div>
-              Tuition range: {data.tuition_min?.toLocaleString() || "N/A"} - {data.tuition_max?.toLocaleString() || "N/A"} {data.tuition_currency || ""}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          {typeof data.total_students === "number" && (
+            <div className="p-4 rounded-lg border bg-gray-50">
+              <div className="text-2xl font-bold">
+                {data.total_students.toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-500">Students</div>
             </div>
           )}
-          {data.scholarship_info && <div className="sm:col-span-2 lg:col-span-3">Scholarships: {data.scholarship_info}</div>}
+
+          {typeof data.international_students_percent === "number" && (
+            <div className="p-4 rounded-lg border bg-gray-50">
+              <div className="text-2xl font-bold">
+                {data.international_students_percent}%
+              </div>
+              <div className="text-xs text-gray-500">International</div>
+            </div>
+          )}
+
+          {typeof data.acceptance_rate_estimate === "number" && (
+            <div className="p-4 rounded-lg border bg-gray-50">
+              <div className="text-2xl font-bold">
+                {data.acceptance_rate_estimate}%
+              </div>
+              <div className="text-xs text-gray-500">Acceptance</div>
+            </div>
+          )}
+
+          {(typeof data.tuition_min === "number" || typeof data.tuition_max === "number") && (
+            <div className="p-4 rounded-lg border bg-gray-50">
+              <div className="text-lg font-bold">
+                {data.tuition_min?.toLocaleString() || "—"} - {data.tuition_max?.toLocaleString() || "—"}
+              </div>
+              <div className="text-xs text-gray-500">
+                Tuition {data.tuition_currency || ""}
+              </div>
+            </div>
+          )}
+
+          {typeof data.female_percent === "number" && (
+            <div className="p-4 rounded-lg border bg-gray-50">
+              <div className="text-2xl font-bold">
+                {data.female_percent}%
+              </div>
+              <div className="text-xs text-gray-500">Female</div>
+            </div>
+          )}
+
         </div>
       </div>
 
